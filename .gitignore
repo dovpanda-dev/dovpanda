@@ -1,3 +1,11 @@
+# PyCharm
+.DS_Store
+.idea
+
+# Run Files
+mock_*
+
+# Base
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
