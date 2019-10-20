@@ -5,49 +5,38 @@ from collections import defaultdict
 
 class Ledger:
     def __init__(self):
-        self.prefix_hooks = defaultdict(list)
-        self.suffix_hooks = defaultdict(list)
+        self.hooks = defaultdict(list)
 
-    def replace(self, original, replacement, order_type='prefix'):
+    def replace(self, original, hooks: tuple):
         g = rgetattr(sys.modules['pandas'], original)
-        if order_type == 'prefix':
-            rsetattr(sys.modules['pandas'], original, prefix_function(g, replacement))
-        else:
-            rsetattr(sys.modules['pandas'], original, suffix_function(g, replacement))
+        rsetattr(sys.modules['pandas'], original, attach_hooks(g, hooks))
 
-    def add_hook(self, original, order_type='prefix'):
+    def add_hook(self, original, hook_type='pre'):
+        accepted_hooks = ['pre', 'post']
+        assert hook_type in accepted_hooks, f'hook_type must be one of {accepted_hooks}'
+
         def replaces_decorator(replacement):
-            self.prefix_hooks[original].append(replacement) if order_type == 'prefix' else self.suffix_hooks[
-                original].append(replacement)
+            self.hooks[original].append((replacement, hook_type))
 
         return replaces_decorator
 
     def register_hooks(self):
-        for k, v in self.prefix_hooks.items():
-            self.replace(k, v, 'prefix')
-        for k, v in self.suffix_hooks.items():
-            self.replace(k, v, 'suffix')
+        for original, func_hooks in self.hooks.items():
+            self.replace(original, func_hooks)
 
 
-def prefix_function(f, pres):
+def attach_hooks(f, hooks):
+    pres = [hook_function for (hook_function, hook_type) in hooks if hook_type.lower().startswith('pre')]
+    posts = [hook_function for (hook_function, hook_type) in hooks if hook_type.lower().startswith('post')]
+
     @functools.wraps(f)
     def run(*args, **kwargs):
-        # print(args, kwargs)
-        # print (f.__name__)
         for pre in pres:
             pre(*args, **kwargs)
-        return f(*args, **kwargs)
-
-    return run
-
-
-def suffix_function(f, suffixes):
-    @functools.wraps(f)
-    def run(*args, **kwargs):
-        res = f(*args, **kwargs)
-        for suffix in suffixes:
-            suffix(res, *args, **kwargs)
-        return res
+        ret = f(*args, **kwargs)
+        for post in posts:
+            post(ret, *args, **kwargs)
+        return ret
 
     return run
 

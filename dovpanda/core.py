@@ -30,7 +30,7 @@ def time_grouping(*args, **kwargs):
         print('Seems like you are grouping by time, consider using resample')
 
 
-@ledger.add_hook('concat', order_type='suffix')
+@ledger.add_hook('concat', hook_type='post')
 def duplicate_index_after_concat(res, *args, **kwargs):
     if res.index.nunique() != len(res.index):
         print('After concatenating you have duplicated indexes values - pay attention')
