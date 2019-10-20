@@ -7,31 +7,36 @@ class Ledger:
     def __init__(self):
         self.hooks = defaultdict(list)
 
-
-    def replace(self, original, replacement):
+    def replace(self, original, hooks: tuple):
         g = rgetattr(sys.modules['pandas'], original)
-        rsetattr(sys.modules['pandas'], original, prefix_function(g, replacement))
+        rsetattr(sys.modules['pandas'], original, attach_hooks(g, hooks))
 
-    def add_hook(self, original):
+    def add_hook(self, original, hook_type='pre'):
+        accepted_hooks = ['pre', 'post']
+        assert hook_type in accepted_hooks, f'hook_type must be one of {accepted_hooks}'
+
         def replaces_decorator(replacement):
-            self.hooks[original].append(replacement)
+            self.hooks[original].append((replacement, hook_type))
 
         return replaces_decorator
 
     def register_hooks(self):
-        for k, v in self.hooks.items():
-            self.replace(k, v)
+        for original, func_hooks in self.hooks.items():
+            self.replace(original, func_hooks)
 
 
+def attach_hooks(f, hooks):
+    pres = [hook_function for (hook_function, hook_type) in hooks if hook_type.lower().startswith('pre')]
+    posts = [hook_function for (hook_function, hook_type) in hooks if hook_type.lower().startswith('post')]
 
-def prefix_function(f, pres):
     @functools.wraps(f)
     def run(*args, **kwargs):
-        # print(args, kwargs)
-        # print (f.__name__)
         for pre in pres:
             pre(*args, **kwargs)
-        return f(*args, **kwargs)
+        ret = f(*args, **kwargs)
+        for post in posts:
+            post(ret, *args, **kwargs)
+        return ret
 
     return run
 
@@ -54,6 +59,7 @@ def rsetattr(obj, attr, value):
 def only_print(s, *args, **kwargs):
     print(s)
     return lambda x: (args, kwargs)
+
 
 def listify(val):
     if type(val) is str:
