@@ -22,7 +22,8 @@ In [3]: df = pd.DataFrame({'a':list('xxyy'),'b':[40,50,60,70], 'time':['18:02','
    ...: df['hour'] = df.time.dt.hour
 
 In [4]: df.groupby('hour').b.sum()
-===== Seems like you are grouping by a column named 'hour', consider using df.resample('h') =====
+===== Seems like you are grouping by a column named 'hour', consider setting the your
+time column as index and then use df.resample('h') =====
 Out[4]:
 hour
 18    90
