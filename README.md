@@ -22,7 +22,7 @@ In [3]: df = pd.DataFrame({'a':list('xxyy'),'b':[40,50,60,70], 'time':['18:02','
    ...: df['hour'] = df.time.dt.hour
 
 In [4]: df.groupby('hour').b.sum()
-===== Seems like you are grouping by a column named 'hour', consider using df.resample =====
+===== Seems like you are grouping by a column named 'hour', consider using df.resample('h') =====
 Out[4]:
 hour
 18    90
@@ -33,7 +33,7 @@ Name: b, dtype: int64
 
 ### Notebook Support
 Running `dovpanda` in a notebook environment will display rendered dismissable html.
-<img width="1017" alt="notebook example" src="https://user-images.githubusercontent.com/7852981/67239045-f9fd4280-f456-11e9-9b28-5c8ed865872d.png">
+<img width="800" alt="notebook display" src="https://user-images.githubusercontent.com/7852981/67240707-aee52e80-f45a-11e9-9f6b-8dca0b9af3d5.png">
 
 ## Advanced Usage
 ### Random Tips
