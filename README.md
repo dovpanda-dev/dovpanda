@@ -16,7 +16,7 @@ This is it. From now on you can expect `dovpanda` to come with helpful direction
 you are writing you code.
 
 ### Example
-```ipython
+```python
 In [3]: df = pd.DataFrame({'a':list('xxyy'),'b':[40,50,60,70], 'time':['18:02','18:45','20:12','21:50']})
    ...: df['time'] = pd.to_datetime(df.time)
    ...: df['hour'] = df.time.dt.hour
@@ -42,7 +42,7 @@ Running `dovpanda` in a notebook environment will display rendered dismissable h
 ### Change Display
 use `dovpanda.set_output` if you want to change output.
 
-```ipython
+```python
 In [14]: dovpanda.set_output('display')
 
 In [15]: df.iterrows()
