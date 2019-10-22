@@ -60,3 +60,15 @@ def wrong_concat_axis(*args, **kwargs):
     elif same_rows and same_rows:
         ledger.tell("All dataframes have the same columns and same number of rows. "
                     f"Pay attention, your axis is {axis} which concatenates {axis_translation[axis]}")
+
+@ledger.add_hook('read_csv','post')
+def csv_index(res, *args, **kwargs):
+    filename = base.get_arg(args,kwargs,0,'filepath_or_buffer')
+    if type(filename) is str:
+        filename = "'" + filename + "'"
+    else:
+        filename = 'file'
+    if 'Unnamed: 0' in res.columns:
+        if (len(args) < 5) and ('index_col' not in kwargs.keys()):
+            ledger.tell('Your left most column is unnamed. This suggets it might be the index column, try: '
+                        f'<code>pd.read_csv({filename}, index_col=0)</code>')
