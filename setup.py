@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.0.1",
     author="Dean Langsam",
     author_email="deanla@gmail.com",
-    description="DOn't reinVent PANDAs",
+    description="Directions overlay for working with pandas in an analysis environment",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/DeanLa/dovpanda",
