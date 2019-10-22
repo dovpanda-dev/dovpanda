@@ -1,7 +1,12 @@
 import functools
+import pathlib
 import sys
+import traceback
 from collections import defaultdict
 
+import pandas
+
+PANDAS_DIR = str(pathlib.Path(pandas.__file__).parent.absolute())
 try:  # If user runs from notebook they will have this
     from IPython.display import display
 except:
@@ -104,11 +109,15 @@ def attach_hooks(f, hooks):
 
     @functools.wraps(f)
     def run(*args, **kwargs):
-        for pre in pres:
-            pre(*args, **kwargs)
-        ret = f(*args, **kwargs)
-        for post in posts:
-            post(ret, *args, **kwargs)
+        caller = traceback.extract_stack()[-2].filename
+        if caller.startswith(PANDAS_DIR):
+            ret = f(*args, **kwargs)
+        else:
+            for pre in pres:
+                pre(*args, **kwargs)
+            ret = f(*args, **kwargs)
+            for post in posts:
+                post(ret, *args, **kwargs)
         return ret
 
     return run
