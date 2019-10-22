@@ -4,7 +4,7 @@
 Directions overlay for working with pandas in an analysis environment.    
 If you think your task is common enough, it probably is, and Pandas probably has a built-in solution.
 dovpanda is an overlay module that tries to understand what you are trying to do with your data, and help you
-find easier ways to write you code.
+find easier ways to write your code.
 
 ## Usage
 The basic usage of `dovpanda` is very east. you just import it after you import pandas
