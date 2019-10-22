@@ -17,6 +17,9 @@ class Tip:
     def _repr_html_(self):
         return self.html
 
+class TextTip(Tip):
+    pass
+
 class TwitterTip(Tip):
         def __init__(self, tweet_id):
             super().__init__()
