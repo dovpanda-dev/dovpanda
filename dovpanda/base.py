@@ -159,3 +159,6 @@ def listify(val):
     if type(val) is str:
         return [val]
     return val
+
+def setify(val):
+    return set(listify(val))
