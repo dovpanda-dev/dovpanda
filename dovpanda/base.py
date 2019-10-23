@@ -1,5 +1,6 @@
 import functools
 import pathlib
+import re
 import sys
 import traceback
 from collections import defaultdict
@@ -19,10 +20,10 @@ class Teller:
         self.set_output('display')
 
     def __repr__(self):
-        return (f'===== {self.message} =====')
+        return self._strip_html(f'===== {self.message} =====')
 
     def __str__(self):
-        return self.message
+        return self._strip_html(self.message)
 
     def _repr_html_(self):
         return nice_output(self.message)
@@ -30,6 +31,9 @@ class Teller:
     def __call__(self, s):
         self.tell(s)
 
+    @staticmethod
+    def _strip_html(s):
+        return re.sub('<[^<]+?>', '', s)
     @staticmethod
     def _no_output(*args, **kwargs):
         return
