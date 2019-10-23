@@ -39,6 +39,17 @@ def duplicate_index_after_concat(res, *args, **kwargs):
 
 
 @ledger.add_hook('concat')
+def concat_single_column(*args, **kwargs):
+    objs = base.get_arg(args, kwargs, 0, 'objs')
+    axis = base.get_arg(args, kwargs, 1, 'axis')
+    cols = {df.shape[1] for df in objs}
+    if axis == 1 and 1 in cols:
+        ledger.tell(
+            'One of the dataframes you are concatenating is with a single column, '
+            'consider using `df.assign()` or `df.insert()`')
+
+
+@ledger.add_hook('concat')
 def wrong_concat_axis(*args, **kwargs):
     objs = base.get_arg(args, kwargs, 0, 'objs')
     axis = base.get_arg(args, kwargs, 1, 'axis')
