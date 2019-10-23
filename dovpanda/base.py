@@ -4,14 +4,32 @@ import re
 import sys
 import traceback
 from collections import defaultdict
+from enum import Enum
 
 import pandas
+
+
+class Level(Enum):
+    CORE = 10
+    DEV = 5
+
 
 PANDAS_DIR = str(pathlib.Path(pandas.__file__).parent.absolute())
 try:  # If user runs from notebook they will have this
     from IPython.display import display
 except:
     pass
+
+
+class Hook:
+    def __init__(self, original, level, hook_type, replacement):
+        accepted_hooks = ['pre', 'post']
+        assert hook_type in accepted_hooks, f'hook_type must be one of {accepted_hooks}'
+
+        self.level = level
+        self.original = original
+        self.hook_type = hook_type
+        self.replacement = replacement
 
 
 class Teller:
@@ -67,20 +85,19 @@ class Teller:
 
 
 class Ledger:
-    def __init__(self):
+    def __init__(self, level):
         self.hooks = defaultdict(list)
         self.teller = Teller()
+        self.level = level
 
     def replace(self, original, hooks: tuple):
         g = rgetattr(sys.modules['pandas'], original)
         rsetattr(sys.modules['pandas'], original, attach_hooks(g, hooks))
 
-    def add_hook(self, original, hook_type='pre'):
-        accepted_hooks = ['pre', 'post']
-        assert hook_type in accepted_hooks, f'hook_type must be one of {accepted_hooks}'
-
+    def add_hook(self, original, level=Level.CORE, hook_type='pre'):
         def replaces_decorator(replacement):
-            self.hooks[original].append((replacement, hook_type))
+            self.hooks[original].append(
+                Hook(original=original, level=level, hook_type=hook_type, replacement=replacement))
 
         return replaces_decorator
 
@@ -108,8 +125,8 @@ def nice_output(s):
 
 
 def attach_hooks(f, hooks):
-    pres = [hook_function for (hook_function, hook_type) in hooks if hook_type.lower().startswith('pre')]
-    posts = [hook_function for (hook_function, hook_type) in hooks if hook_type.lower().startswith('post')]
+    pres = [hook.replacement for hook in hooks if hook.hook_type == 'pre']
+    posts = [hook.replacement for hook in hooks if hook.hook_type == 'post']
 
     @functools.wraps(f)
     def run(*args, **kwargs):
