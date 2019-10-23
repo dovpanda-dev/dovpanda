@@ -67,9 +67,9 @@ class Ledger:
         self.hooks = defaultdict(list)
         self.teller = Teller()
 
-    def replace(self, original, func_hooks: tuple):
+    def replace(self, original):
         g = rgetattr(sys.modules['pandas'], original)
-        rsetattr(sys.modules['pandas'], original, self.attach_hooks(g, func_hooks))
+        rsetattr(sys.modules['pandas'], original, self.attach_hooks(original, g))
 
     def add_hook(self, original, hook_type='pre'):
         accepted_hooks = ['pre', 'post']
@@ -81,8 +81,8 @@ class Ledger:
         return replaces_decorator
 
     def register_hooks(self):
-        for original, func_hooks in self.hooks.items():
-            self.replace(original, func_hooks)
+        for original in self.hooks.keys():
+            self.replace(original)
 
     def tell(self, *args, **kwargs):
         self.teller(*args, *kwargs)
@@ -90,9 +90,11 @@ class Ledger:
     def set_output(self, output):
         self.teller.set_output(output)
 
-    def attach_hooks(self, f, func_hooks):
-        pres = [hook_function for (hook_function, hook_type) in func_hooks if hook_type.lower().startswith('pre')]
-        posts = [hook_function for (hook_function, hook_type) in func_hooks if hook_type.lower().startswith('post')]
+    def attach_hooks(self, f_name, f):
+        pres = [hook_function for (hook_function, hook_type) in self.hooks[f_name] if
+                hook_type.lower().startswith('pre')]
+        posts = [hook_function for (hook_function, hook_type) in self.hooks[f_name] if
+                 hook_type.lower().startswith('post')]
 
         @functools.wraps(f)
         def run(*args, **kwargs):
