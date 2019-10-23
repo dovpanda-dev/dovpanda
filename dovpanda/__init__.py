@@ -8,7 +8,3 @@ else:
 
 def set_output(tell_method):
     ledger.set_output(tell_method)
-
-def dev_mode():
-    from dovpanda.dev import dev_hooks
-    dev_hooks(ledger)

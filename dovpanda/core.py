@@ -1,10 +1,17 @@
 from dovpanda import base
-from dovpanda.base import Ledger
+from dovpanda.base import Ledger, Level
 
-ledger = Ledger()
+ledger = Ledger(level=Level.CORE)
 
 
+@ledger.add_hook('DataFrame.__init__', level=Level.DEV)
+def init_for_checks(*args, **kwargs):
+    ledger.tell('you have construted a df')
 
+
+@ledger.add_hook('DataFrame.__init__', level=Level.DEV)
+def init_another(*args, **kwargs):
+    ledger.tell('another pre hook for init')
 
 
 @ledger.add_hook('DataFrame.iterrows')

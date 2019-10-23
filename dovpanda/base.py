@@ -3,8 +3,15 @@ import pathlib
 import sys
 import traceback
 from collections import defaultdict
+from enum import Enum
 
 import pandas
+
+
+class Level(Enum):
+    CORE = 10
+    DEV = 5
+
 
 PANDAS_DIR = str(pathlib.Path(pandas.__file__).parent.absolute())
 try:  # If user runs from notebook they will have this
@@ -74,15 +81,16 @@ class Teller:
 
 
 class Ledger:
-    def __init__(self):
+    def __init__(self, level):
         self.hooks = defaultdict(list)
         self.teller = Teller()
+        self.level = level
 
     def replace(self, original, hooks: tuple):
         g = rgetattr(sys.modules['pandas'], original)
         rsetattr(sys.modules['pandas'], original, attach_hooks(g, hooks))
 
-    def add_hook(self, original, level='core', hook_type='pre'):
+    def add_hook(self, original, level=Level.CORE, hook_type='pre'):
         def replaces_decorator(replacement):
             self.hooks[original].append(
                 Hook(original=original, level=level, hook_type=hook_type, replacement=replacement))
