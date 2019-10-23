@@ -67,9 +67,9 @@ class Ledger:
         self.hooks = defaultdict(list)
         self.teller = Teller()
 
-    def replace(self, original, hooks: tuple):
+    def replace(self, original, func_hooks: tuple):
         g = rgetattr(sys.modules['pandas'], original)
-        rsetattr(sys.modules['pandas'], original, attach_hooks(g, hooks))
+        rsetattr(sys.modules['pandas'], original, self.attach_hooks(g, func_hooks))
 
     def add_hook(self, original, hook_type='pre'):
         accepted_hooks = ['pre', 'post']
@@ -90,6 +90,25 @@ class Ledger:
     def set_output(self, output):
         self.teller.set_output(output)
 
+    def attach_hooks(self, f, func_hooks):
+        pres = [hook_function for (hook_function, hook_type) in func_hooks if hook_type.lower().startswith('pre')]
+        posts = [hook_function for (hook_function, hook_type) in func_hooks if hook_type.lower().startswith('post')]
+
+        @functools.wraps(f)
+        def run(*args, **kwargs):
+            caller = traceback.extract_stack()[-2].filename
+            if caller.startswith(PANDAS_DIR):
+                ret = f(*args, **kwargs)
+            else:
+                for pre in pres:
+                    pre(*args, **kwargs)
+                ret = f(*args, **kwargs)
+                for post in posts:
+                    post(ret, *args, **kwargs)
+            return ret
+
+        return run
+
 
 def nice_output(s):
     html = f'''
@@ -101,26 +120,6 @@ def nice_output(s):
     </div>
     '''
     return html
-
-
-def attach_hooks(f, hooks):
-    pres = [hook_function for (hook_function, hook_type) in hooks if hook_type.lower().startswith('pre')]
-    posts = [hook_function for (hook_function, hook_type) in hooks if hook_type.lower().startswith('post')]
-
-    @functools.wraps(f)
-    def run(*args, **kwargs):
-        caller = traceback.extract_stack()[-2].filename
-        if caller.startswith(PANDAS_DIR):
-            ret = f(*args, **kwargs)
-        else:
-            for pre in pres:
-                pre(*args, **kwargs)
-            ret = f(*args, **kwargs)
-            for post in posts:
-                post(ret, *args, **kwargs)
-        return ret
-
-    return run
 
 
 def get_arg(args, kwargs, which_arg, which_kwarg):
