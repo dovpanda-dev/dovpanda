@@ -60,3 +60,13 @@ def wrong_concat_axis(*args, **kwargs):
     elif same_rows and same_rows:
         ledger.tell("All dataframes have the same columns and same number of rows. "
                     f"Pay attention, your axis is {axis} which concatenates {axis_translation[axis]}")
+
+@ledger.add_hook('DataFrame.__eq__')
+def df_check_equality(*args):
+    ledger.tell(f'Calling df1 == df2 compares the objects element-wise. '
+                'If you need a boolean condition, try df1.equals(df2)')
+
+@ledger.add_hook('Series.__eq__')
+def series_check_equality(*args):
+    ledger.tell(f'Calling series1 == series2 compares the objects element-wise. '
+                'If you need a boolean condition, try series1.equals(series2)')
