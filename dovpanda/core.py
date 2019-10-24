@@ -39,6 +39,17 @@ def duplicate_index_after_concat(res, *args, **kwargs):
 
 
 @ledger.add_hook('concat')
+def concat_single_column(*args, **kwargs):
+    objs = base.get_arg(args, kwargs, 0, 'objs')
+    axis = base.get_arg(args, kwargs, 1, 'axis')
+    cols = {df.shape[1] for df in objs}
+    if axis == 1 and 1 in cols:
+        ledger.tell(
+            'One of the dataframes you are concatenating is with a single column, '
+            'consider using `df.assign()` or `df.insert()`')
+
+
+@ledger.add_hook('concat')
 def wrong_concat_axis(*args, **kwargs):
     objs = base.get_arg(args, kwargs, 0, 'objs')
     axis = base.get_arg(args, kwargs, 1, 'axis')
@@ -60,6 +71,20 @@ def wrong_concat_axis(*args, **kwargs):
     elif same_rows and same_rows:
         ledger.tell("All dataframes have the same columns and same number of rows. "
                     f"Pay attention, your axis is {axis} which concatenates {axis_translation[axis]}")
+
+
+@ledger.add_hook('DataFrame.__eq__')
+def df_check_equality(*args):
+    if type(args[0]) == type(args[1]):
+        ledger.tell(f'Calling df1 == df2 compares the objects element-wise. '
+                    'If you need a boolean condition, try df1.equals(df2)')
+
+
+@ledger.add_hook('Series.__eq__')
+def series_check_equality(*args):
+    if type(args[0]) == type(args[1]):
+        ledger.tell(f'Calling series1 == series2 compares the objects element-wise. '
+                    'If you need a boolean condition, try series1.equals(series2)')
 
 @ledger.add_hook('read_csv','post')
 def csv_index(res, *args, **kwargs):
