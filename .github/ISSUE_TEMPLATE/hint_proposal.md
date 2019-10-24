@@ -10,7 +10,7 @@ about: If you'd like to propose a new hint, please use this template.
 <!-- Write the original pandas function this hint will hook-->
 
 # Hook Type
-<-- will it run as pre-hook or post-hook -->
+<!-- will it run as pre-hook or post-hook -->
 # Brief Description
 
 # Design
