@@ -39,6 +39,17 @@ def duplicate_index_after_concat(res, *args, **kwargs):
 
 
 @ledger.add_hook('concat')
+def concat_single_column(*args, **kwargs):
+    objs = base.get_arg(args, kwargs, 0, 'objs')
+    axis = base.get_arg(args, kwargs, 1, 'axis')
+    cols = {df.shape[1] for df in objs}
+    if axis == 1 and 1 in cols:
+        ledger.tell(
+            'One of the dataframes you are concatenating is with a single column, '
+            'consider using `df.assign()` or `df.insert()`')
+
+
+@ledger.add_hook('concat')
 def wrong_concat_axis(*args, **kwargs):
     objs = base.get_arg(args, kwargs, 0, 'objs')
     axis = base.get_arg(args, kwargs, 1, 'axis')
@@ -61,6 +72,7 @@ def wrong_concat_axis(*args, **kwargs):
         ledger.tell("All dataframes have the same columns and same number of rows. "
                     f"Pay attention, your axis is {axis} which concatenates {axis_translation[axis]}")
 
+
 @ledger.add_hook('read_csv','post')
 def csv_index(res, *args, **kwargs):
     filename = base.get_arg(args,kwargs,0,'filepath_or_buffer')
@@ -72,3 +84,14 @@ def csv_index(res, *args, **kwargs):
         if (len(args) < 5) and ('index_col' not in kwargs.keys()):
             ledger.tell('Your left most column is unnamed. This suggets it might be the index column, try: '
                         f'<code>pd.read_csv({filename}, index_col=0)</code>')
+
+@ledger.add_hook('DataFrame.__eq__')
+def df_check_equality(*args):
+    ledger.tell(f'Calling df1 == df2 compares the objects element-wise. '
+                'If you need a boolean condition, try df1.equals(df2)')
+
+@ledger.add_hook('Series.__eq__')
+def series_check_equality(*args):
+    ledger.tell(f'Calling series1 == series2 compares the objects element-wise. '
+                'If you need a boolean condition, try series1.equals(series2)')
+
