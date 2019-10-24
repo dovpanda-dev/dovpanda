@@ -12,8 +12,7 @@ about: Please use this issue template if you are filing a bug report.
 <!-- System information helps us. To keep things simple, just let us know the OS and Python version first.
 You can provide the optional information later. -->
 
-- Operating system: macOS/Linux/Windows  <!-- delete the appropriate ones -->
-- OS details (optional):  <!-- e.g. version, or Linux distro -->
+- Notebook / IPython / Python Console <!-- Please erase irrelevant ones-->
 - Python version (required): 
 
 # Minimally Reproducible Code
