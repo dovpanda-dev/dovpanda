@@ -14,29 +14,55 @@ except:
     pass
 
 
-class Teller:
+class _Teller:
     def __init__(self):
         self.message = None
         self.set_output('display')
+        self.line = None
+        self.lineno = None
+        self.verbose = True
 
     def __repr__(self):
-        return self._strip_html(f'===== {self.message} =====')
+        trace = self.if_verbose(f' (Line {self.lineno})')
+        return self._strip_html(f'===== {self.message} ====={trace}')
 
     def __str__(self):
-        return self._strip_html(self.message)
-
-    def _repr_html_(self):
-        return nice_output(self.message)
+        trace = self.if_verbose(f' (Line {self.lineno})')
+        return f'{self._strip_html(self.message)}{trace}'
 
     def __call__(self, s):
         self.tell(s)
 
+    def _repr_html_(self):
+        return self.nice_output()
+
+    def nice_output(self):
+        trace = f'<div style="font-size:0.7em;">Line {self.lineno}: <code>{self.line}</code> </div>'
+        trace = self.if_verbose(trace)
+        html = f'''
+        <div class="alert alert-info" role="alert">
+          {self.message}<br>
+          {trace}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        '''
+        return html
+
     @staticmethod
     def _strip_html(s):
         return re.sub('<[^<]+?>', '', s)
+
     @staticmethod
     def _no_output(*args, **kwargs):
         return
+
+    def if_verbose(self, s):
+        if self.verbose:
+            return s
+        else:
+            return ''
 
     def set_output(self, output_method):
         accepted_methods = ['print', 'display', 'debug', 'info', 'warning', 'off']
@@ -69,7 +95,9 @@ class Teller:
 class Ledger:
     def __init__(self):
         self.hooks = defaultdict(list)
-        self.teller = Teller()
+        self.teller = _Teller()
+        self.verbose = True
+        self.caller_filename = None
 
     def replace(self, original, func_hooks: tuple):
         g = rgetattr(sys.modules['pandas'], original)
@@ -88,20 +116,15 @@ class Ledger:
         for original, func_hooks in self.hooks.items():
             self.replace(original, func_hooks)
 
-    def tell(self, *args, **kwargs):
-        self.teller(*args, *kwargs)
-
-    def set_output(self, output):
-        self.teller.set_output(output)
-
     def attach_hooks(self, f, func_hooks):
         pres = [hook_function for (hook_function, hook_type) in func_hooks if hook_type.lower().startswith('pre')]
         posts = [hook_function for (hook_function, hook_type) in func_hooks if hook_type.lower().startswith('post')]
 
         @functools.wraps(f)
         def run(*args, **kwargs):
-            caller = traceback.extract_stack()[-2].filename
-            if caller.startswith(PANDAS_DIR):
+            caller = traceback.extract_stack()[-2]
+            self._set_caller_details(caller)
+            if self.inner_pandas:
                 ret = f(*args, **kwargs)
             else:
                 for pre in pres:
@@ -113,17 +136,23 @@ class Ledger:
 
         return run
 
+    def _set_caller_details(self, caller):
+        self.caller_filename = caller.filename
+        self.inner_pandas = self.caller_filename.startswith(PANDAS_DIR)
+        if self.caller_filename.startswith(PANDAS_DIR):
+            return
+        self.teller.line = caller.line
+        self.teller.lineno = caller.lineno
 
-def nice_output(s):
-    html = f'''
-    <div class="alert alert-info" role="alert">
-      {s}
-      <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
-      </button>
-    </div>
-    '''
-    return html
+    # Output
+    def tell(self, *args, **kwargs):
+        self.teller(*args, *kwargs)
+
+    def set_output(self, output):
+        self.teller.set_output(output)
+
+    def set_verbose(self, verbose=True):
+        self.teller.verbose = verbose
 
 
 def get_arg(args, kwargs, which_arg, which_kwarg):
@@ -158,6 +187,7 @@ def listify(val):
     if type(val) is str:
         return [val]
     return val
+
 
 def setify(val):
     return set(listify(val))
