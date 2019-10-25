@@ -1,7 +1,10 @@
 ---
 name: Propose New Hint
 about: If you'd like to propose a new hint, please use this template.
+title: ''
 labels: _Hints
+assignees: ''
+
 ---
 
 # Basic Functionality
