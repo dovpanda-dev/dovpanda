@@ -41,11 +41,12 @@ class _Teller:
         trace = self.if_verbose(trace)
         html = f'''
         <div class="alert alert-info" role="alert">
-          {self.message}<br>
-          {trace}
+          {self.message}
           <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
+          {trace}
+
         </div>
         '''
         return html
@@ -115,6 +116,7 @@ class Ledger:
     def register_hooks(self):
         for original, func_hooks in self.hooks.items():
             self.replace(original, func_hooks)
+
 
     def attach_hooks(self, f, func_hooks):
         pres = [hook_function for (hook_function, hook_type) in func_hooks if hook_type.lower().startswith('pre')]
