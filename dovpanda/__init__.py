@@ -2,7 +2,7 @@ import sys
 
 from dovpanda.core import ledger
 if 'pandas' in sys.modules.keys():
-    ledger.register_hooks()
+    ledger.register_hints()
 else:
     ledger.tell('Pandas not imported')
 
