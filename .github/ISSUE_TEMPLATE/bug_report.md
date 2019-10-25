@@ -1,6 +1,7 @@
 ---
 name: Bug Report
 about: Please use this issue template if you are filing a bug report.
+labels: bug
 ---
 
 # Brief Description
