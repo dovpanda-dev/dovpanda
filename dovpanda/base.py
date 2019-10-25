@@ -117,8 +117,8 @@ class Ledger:
     def add_hint(self, original, hook_type='pre'):
 
         def replaces_decorator(replacement):
-            self.hints[original].append(
-                Hint(original=original, hook_type=hook_type, replacement=replacement))
+            hint = Hint(original=original, hook_type=hook_type, replacement=replacement)
+            self.hints[original].append(hint)
 
         return replaces_decorator
 
