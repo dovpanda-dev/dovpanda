@@ -85,3 +85,18 @@ def series_check_equality(*args):
     if type(args[0]) == type(args[1]):
         ledger.tell(f'Calling series1 == series2 compares the objects element-wise. '
                     'If you need a boolean condition, try series1.equals(series2)')
+
+
+@ledger.add_hook('read_csv','post')
+def csv_index(res, *args, **kwargs):
+    filename = base.get_arg(args,kwargs,0,'filepath_or_buffer')
+    if type(filename) is str:
+        filename = "'" + filename + "'"
+    else:
+        filename = 'file'
+    if 'Unnamed: 0' in res.columns:
+        if (len(args) < 5) and ('index_col' not in kwargs.keys()):
+            ledger.tell('Your left most column is unnamed. This suggets it might be the index column, try: '
+                        f'<code>pd.read_csv({filename}, index_col=0)</code>')
+
+
