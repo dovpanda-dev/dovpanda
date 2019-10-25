@@ -3,15 +3,18 @@ from dovpanda.base import Ledger
 
 ledger = Ledger()
 
+# @ledger.add_hook('DataFrame.shape')
+# def shape_check(res):
+#     ledger.tell(f'{res[0]} rows!')
 
-@ledger.add_hook('DataFrame.__init__')
-def init_for_checks(*args, **kwargs):
-    ledger.tell('you have construted a df')
-
-
-@ledger.add_hook('DataFrame.__init__')
-def init_another(*args, **kwargs):
-    ledger.tell('another pre hook for init')
+# @ledger.add_hook('DataFrame.__init__')
+# def init_for_checks(*args, **kwargs):
+#     ledger.tell('you have construted a df')
+#
+#
+# @ledger.add_hook('DataFrame.__init__')
+# def init_another(*args, **kwargs):
+#     ledger.tell('another pre hook for init')
 
 
 @ledger.add_hook('DataFrame.iterrows')

@@ -138,6 +138,9 @@ class Ledger:
 
         return run
 
+    def attach_proprty_hooks(self, p, p_hooks):
+        pass
+
     def _set_caller_details(self, caller):
         self.caller_filename = caller.filename
         self.inner_pandas = self.caller_filename.startswith(PANDAS_DIR)
