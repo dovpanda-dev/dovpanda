@@ -14,6 +14,16 @@ except:
     pass
 
 
+class Hint:
+    def __init__(self, original, hook_type, replacement):
+        accepted_hooks = ['pre', 'post']
+        assert hook_type in accepted_hooks, f'hook_type must be one of {accepted_hooks}'
+
+        self.original = original
+        self.hook_type = hook_type
+        self.replacement = replacement
+
+
 class _Teller:
     def __init__(self):
         self.message = None
@@ -95,7 +105,7 @@ class _Teller:
 
 class Ledger:
     def __init__(self):
-        self.hooks = defaultdict(list)
+        self.hints = defaultdict(list)
         self.teller = _Teller()
         self.verbose = True
         self.caller_filename = None
@@ -104,23 +114,21 @@ class Ledger:
         g = rgetattr(sys.modules['pandas'], original)
         rsetattr(sys.modules['pandas'], original, self.attach_hooks(g, func_hooks))
 
-    def add_hook(self, original, hook_type='pre'):
-        accepted_hooks = ['pre', 'post']
-        assert hook_type in accepted_hooks, f'hook_type must be one of {accepted_hooks}'
+    def add_hint(self, original, hook_type='pre'):
 
         def replaces_decorator(replacement):
-            self.hooks[original].append((replacement, hook_type))
+            self.hints[original].append(
+                Hint(original=original, hook_type=hook_type, replacement=replacement))
 
         return replaces_decorator
 
-    def register_hooks(self):
-        for original, func_hooks in self.hooks.items():
+    def register_hints(self):
+        for original, func_hooks in self.hints.items():
             self.replace(original, func_hooks)
 
-
     def attach_hooks(self, f, func_hooks):
-        pres = [hook_function for (hook_function, hook_type) in func_hooks if hook_type.lower().startswith('pre')]
-        posts = [hook_function for (hook_function, hook_type) in func_hooks if hook_type.lower().startswith('post')]
+        pres = [hook.replacement for hook in func_hooks if hook.hook_type == 'pre']
+        posts = [hook.replacement for hook in func_hooks if hook.hook_type == 'post']
 
         @functools.wraps(f)
         def run(*args, **kwargs):

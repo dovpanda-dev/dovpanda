@@ -4,22 +4,22 @@ from dovpanda.base import Ledger
 ledger = Ledger()
 
 
-@ledger.add_hook('DataFrame.__init__')
+@ledger.add_hint('DataFrame.__init__')
 def init_for_checks(*args, **kwargs):
     ledger.tell('you have construted a df')
 
 
-@ledger.add_hook('DataFrame.__init__')
+@ledger.add_hint('DataFrame.__init__')
 def init_another(*args, **kwargs):
     ledger.tell('another pre hook for init')
 
 
-@ledger.add_hook('DataFrame.iterrows')
+@ledger.add_hint('DataFrame.iterrows')
 def iterrows_is_bad(*args, **kwargs):
     ledger.tell("iterrows is not recommended, and in the majority of cases will have better alternatives")
 
 
-@ledger.add_hook('DataFrame.groupby')
+@ledger.add_hint('DataFrame.groupby')
 def time_grouping(*args, **kwargs):
     try:
         by = args[1]
@@ -30,7 +30,7 @@ def time_grouping(*args, **kwargs):
         ledger.tell('Seems like you are grouping by time, consider using resample')
 
 
-@ledger.add_hook('concat', hook_type='post')
+@ledger.add_hint('concat', hook_type='post')
 def duplicate_index_after_concat(res, *args, **kwargs):
     if res.index.nunique() != len(res.index):
         ledger.tell('After concatenation you have duplicated indexes values - pay attention')
@@ -38,7 +38,7 @@ def duplicate_index_after_concat(res, *args, **kwargs):
         ledger.tell('After concatenation you have duplicated column names - pay attention')
 
 
-@ledger.add_hook('concat')
+@ledger.add_hint('concat')
 def concat_single_column(*args, **kwargs):
     objs = base.get_arg(args, kwargs, 0, 'objs')
     axis = base.get_arg(args, kwargs, 1, 'axis')
@@ -49,7 +49,7 @@ def concat_single_column(*args, **kwargs):
             'consider using `df.assign()` or `df.insert()`')
 
 
-@ledger.add_hook('concat')
+@ledger.add_hint('concat')
 def wrong_concat_axis(*args, **kwargs):
     objs = base.get_arg(args, kwargs, 0, 'objs')
     axis = base.get_arg(args, kwargs, 1, 'axis')
@@ -73,21 +73,21 @@ def wrong_concat_axis(*args, **kwargs):
                     f"Pay attention, your axis is {axis} which concatenates {axis_translation[axis]}")
 
 
-@ledger.add_hook('DataFrame.__eq__')
+@ledger.add_hint('DataFrame.__eq__')
 def df_check_equality(*args):
     if type(args[0]) == type(args[1]):
         ledger.tell(f'Calling df1 == df2 compares the objects element-wise. '
                     'If you need a boolean condition, try df1.equals(df2)')
 
 
-@ledger.add_hook('Series.__eq__')
+@ledger.add_hint('Series.__eq__')
 def series_check_equality(*args):
     if type(args[0]) == type(args[1]):
         ledger.tell(f'Calling series1 == series2 compares the objects element-wise. '
                     'If you need a boolean condition, try series1.equals(series2)')
 
 
-@ledger.add_hook('read_csv','post')
+@ledger.add_hint('read_csv','post')
 def csv_index(res, *args, **kwargs):
     filename = base.get_arg(args,kwargs,0,'filepath_or_buffer')
     if type(filename) is str:
