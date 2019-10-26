@@ -10,7 +10,7 @@ import pandas
 PANDAS_DIR = str(pathlib.Path(pandas.__file__).parent.absolute())
 try:  # If user runs from notebook they will have this
     from IPython.display import display
-except:
+except (ModuleNotFoundError, ImportError):
     pass
 
 
@@ -91,7 +91,7 @@ class _Teller:
         elif output_method == 'display':
             try:
                 self.output = display
-            except:
+            except (ModuleNotFoundError, ImportError):
                 self.set_output('print')
         elif output_method == 'off':
             self.output = self._no_output
