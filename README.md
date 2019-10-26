@@ -1,19 +1,20 @@
 # dovpanda
 ## Directions OVer PANDAs
 
-Directions overlay for working with pandas in an analysis environment.    
+Directions are hints and tips for using pandas in an analysis environment.
+dovpanda is an overlay for working with pandas in an analysis environment.    
 If you think your task is common enough, it probably is, and Pandas probably has a built-in solution.
 dovpanda is an overlay module that tries to understand what you are trying to do with your data, and help you
 find easier ways to write your code.
 
 ## Usage
-The basic usage of `dovpanda` is very east. you just import it after you import pandas
+### Hints
+The basic usage of `dovpanda` is its hints mechanism, which is very easy and out-of-the-box. Just import it after you import pandas
 ```python
 import pandas as pd
 import dovpanda
 ```     
-This is it. From now on you can expect `dovpanda` to come with helpful directions while
-you are writing you code.
+This is it. From now on you can expect `dovpanda` to come with helpful hints while you are writing you code.
 
 ### Example
 ```python
