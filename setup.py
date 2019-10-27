@@ -1,22 +1,44 @@
-import setuptools
+#!/usr/bin/env python
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+import os
+import sys
 
-setuptools.setup(
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+
+if sys.argv[-1] == 'publish':
+    os.system('python setup.py sdist upload')
+    sys.exit()
+
+readme = open('README.rst').read()
+doclink = """
+Documentation
+-------------
+
+The full documentation is at http://dovpanda.rtfd.org."""
+history = open('HISTORY.rst').read().replace('.. :changelog:', '')
+
+setup(
     name="dovpanda",
-    version="0.0.1",
+    version="0.0.2",
+    description='Directions overlay for working with pandas in an analysis environment',
     author="Dean Langsam",
     author_email="deanla@gmail.com",
-    description="Directions overlay for working with pandas in an analysis environment",
-    long_description=long_description,
+    long_description=readme + '\n\n' + doclink + '\n\n' + history,
     long_description_content_type="text/markdown",
-    url="https://github.com/DeanLa/dovpanda",
-    packages=setuptools.find_packages(),
+    url="https://github.com/dovpanda-dev/dovpanda",
+    packages=['dovpanda'],
+    install_requires=['pandas'],
     classifiers=[
-        "Programming Language :: Python :: 3",
+        'Development Status :: 2 - Pre-Alpha',
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3 : Only",
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+
     ],
     python_requires='>=3.6',
 )
