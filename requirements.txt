@@ -1,0 +1,8 @@
+pip>=19.3
+pandas>=0.23
+wheel>=0.33.6
+jupyter>=1.0.0
+twine==2.0.0
+flake8
+sphinx
+pytest
