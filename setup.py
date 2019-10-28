@@ -22,7 +22,7 @@ history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 setup(
     name="dovpanda",
-    version="0.0.1-alpha2",
+    version="0.0.1",
     description='Directions overlay for working with pandas in an analysis environment',
     author="Dean Langsam",
     author_email="deanla@gmail.com",
