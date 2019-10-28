@@ -1,3 +1,6 @@
+__author__ = """Dean Langsam"""
+__version__ = '0.0.2'
+
 import sys
 
 from dovpanda.core import ledger
