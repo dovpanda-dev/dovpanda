@@ -1,8 +1,5 @@
-# dovpanda 
+<h1><img src="img/logo.png" alt="logo" width="100"> dovpanda </h1>
 
-![logo](img/logo.png)
-
-<img src="img/logo.png" alt="logo">
 
 [![pypi](https://img.shields.io/pypi/v/dovpanda.svg)](https://pypi.python.org/pypi/dovpanda)
 [![Build Status](https://travis-ci.org/dovpanda-dev/dovpanda.svg?branch=master)](https://travis-ci.org/dovpanda-dev/dovpanda)
