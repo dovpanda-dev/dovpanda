@@ -114,11 +114,12 @@ class Ledger:
         g = rgetattr(sys.modules['pandas'], original)
         rsetattr(sys.modules['pandas'], original, self.attach_hooks(g, func_hooks))
 
-    def add_hint(self, original, hook_type='pre'):
+    def add_hint(self, originals, hook_type='pre'):
 
         def replaces_decorator(replacement):
-            hint = Hint(original=original, hook_type=hook_type, replacement=replacement)
-            self.hints[original].append(hint)
+            hint = Hint(original=originals, hook_type=hook_type, replacement=replacement)
+            for original in listify(originals):
+                self.hints[original].append(hint)
 
         return replaces_decorator
 
