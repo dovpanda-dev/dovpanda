@@ -1,4 +1,9 @@
-# dovpanda
+# dovpanda 
+
+![logo](img/logo.png)
+
+<img src="img/logo.png" alt="logo">
+
 [![pypi](https://img.shields.io/pypi/v/dovpanda.svg)](https://pypi.python.org/pypi/dovpanda)
 [![Build Status](https://travis-ci.org/dovpanda-dev/dovpanda.svg?branch=master)](https://travis-ci.org/dovpanda-dev/dovpanda)
 [![Documentation Status](https://readthedocs.org/projects/dovpanda/badge/?version=latest)](https://dovpanda.readthedocs.io/en/latest/?badge=latest)
@@ -78,3 +83,8 @@ In [21]: df.iterrows()
 Out[21]: <generator object DataFrame.iterrows at 0x1047c4d68>
 ```
  
+## Other Packages 
+
+
+## Credits
+Logo: <a href="https://www.freepik.com/free-photos-vectors/nature">Nature vector created by freepik - www.freepik.com</a>
