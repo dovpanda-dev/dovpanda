@@ -83,5 +83,4 @@ Out[21]: <generator object DataFrame.iterrows at 0x1047c4d68>
 ## Other Packages 
 
 
-## Credits
-Logo: <a href="https://www.freepik.com/free-photos-vectors/nature">Nature vector created by freepik - www.freepik.com</a>
+
