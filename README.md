@@ -1,4 +1,6 @@
-# dovpanda
+<h1><img src="img/logo.png" alt="logo" width="100"> dovpanda </h1>
+
+
 [![pypi](https://img.shields.io/pypi/v/dovpanda.svg)](https://pypi.python.org/pypi/dovpanda)
 [![Build Status](https://travis-ci.org/dovpanda-dev/dovpanda.svg?branch=master)](https://travis-ci.org/dovpanda-dev/dovpanda)
 [![Documentation Status](https://readthedocs.org/projects/dovpanda/badge/?version=latest)](https://dovpanda.readthedocs.io/en/latest/?badge=latest)
@@ -78,3 +80,7 @@ In [21]: df.iterrows()
 Out[21]: <generator object DataFrame.iterrows at 0x1047c4d68>
 ```
  
+## Other Packages 
+
+
+
