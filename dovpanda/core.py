@@ -99,16 +99,25 @@ def csv_index(res, *args, **kwargs):
             ledger.tell('Your left most column is unnamed. This suggets it might be the index column, try: '
                         f'<code>pd.read_csv({filename}, index_col=0)</code>')
 
-@ledger.add_hint('read_csv', 'post') # TODO: more pd creations
+
+@ledger.add_hint('read_csv', 'post')  # TODO: more pd creations
 def suggest_category_dtype(res, *args, **kwargs):
     rows = res.shape[0]
-    threshold = int(rows/ 4) + 1
+    threshold = int(rows / 4) + 1
     obj_type = (res.select_dtypes('object')
-        .nunique()
-        .loc[lambda x: x<threshold]
-        .to_dict())
+                .nunique()
+                .loc[lambda x: x < threshold]
+                .to_dict())
     for col, uniques in obj_type.items():
-        ledger.tell(f"Dataframe has {rows} rows. Column <code>{col}</code> has only {uniques} values "
-                    f"which suggests it's a categorical feature.<br>"
-                    f"After df is created, Consider using "
-                    f"<code>df['{col}'] = df['{col}'].astype('categorical')</code>")
+        if uniques == 2:
+            dtype = 'boolean'
+            arbitrary = res.loc[:, col].at[0]
+            code = f"df['{col}'] = (df['{col}'] == {arbitrary})"
+        else:
+            dtype = 'categorical'
+            code = f"df['{col}'] = df['{col}'].astype('category')"
+        message = (f"Dataframe has {rows} rows. Column <code>{col}</code> has only {uniques} values "
+                   f"which suggests it's a {dtype} feature.<br>"
+                   f"After df is created, Consider converting it to {dtype} by using "
+                   f"<code>{code}</code>")
+        ledger.tell(message)
