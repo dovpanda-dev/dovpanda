@@ -1,4 +1,4 @@
-<h1><img src="img/logo.png" alt="logo" width="100"> dovpanda </h1>
+<h1><img src="https://github.com/dovpanda-dev/dovpanda/blob/master/img/logo.png" alt="logo" width="100"> dovpanda </h1>
 
 
 [![pypi](https://img.shields.io/pypi/v/dovpanda.svg)](https://pypi.python.org/pypi/dovpanda)
