@@ -1,4 +1,5 @@
 import functools
+import inspect
 import pathlib
 import re
 import sys
@@ -135,17 +136,24 @@ class Ledger:
         def run(*args, **kwargs):
             caller = traceback.extract_stack()[-2]
             self._set_caller_details(caller)
+            arguments = self._make_arguments(f, *args, **kwargs)
+
             if self.inner_pandas:
                 ret = f(*args, **kwargs)
             else:
                 for pre in pres:
-                    pre(*args, **kwargs)
+                    pre(arguments)
                 ret = f(*args, **kwargs)
                 for post in posts:
-                    post(ret, *args, **kwargs)
+                    post(ret, arguments)
             return ret
 
         return run
+
+    def _make_arguments(self, f, *args, **kwargs):
+        sig = inspect.signature(f).bind(*args, **kwargs)
+        sig.apply_defaults()
+        return sig.arguments
 
     def _set_caller_details(self, caller):
         self.caller_filename = caller.filename
