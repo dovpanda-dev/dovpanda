@@ -5,11 +5,22 @@ import sys
 
 from dovpanda.core import ledger
 
-if 'pandas' in sys.modules.keys():
-    ledger.register_hints()
-else:
-    ledger.tell('Pandas not imported')
-
 
 def set_output(tell_method):
     ledger.set_output(tell_method)
+
+
+def shutdown():
+    """Shutdown `dovpanda`. Register original pandas methods back to their namespace"""
+    ledger.revert()
+
+
+def start():
+    """Startup `dovpanda`, in case it has been shut down. This is called when importing `dovpanda`"""
+    ledger.register_hints()
+
+
+if 'pandas' in sys.modules.keys():
+    start()
+else:
+    ledger.tell('Pandas not imported')
