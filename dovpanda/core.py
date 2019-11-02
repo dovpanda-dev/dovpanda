@@ -1,4 +1,4 @@
-from dovpanda import base
+from dovpanda import base, config
 from dovpanda.base import Ledger
 
 ledger = Ledger()
@@ -86,3 +86,14 @@ def csv_index(res, arguments):
         if arguments.get('index_col') is None:
             ledger.tell('Your left most column is unnamed. This suggets it might be the index column, try: '
                         f'<code>pd.read_csv({filename}, index_col=0)</code>')
+
+
+@ledger.add_hint(config.GET_ITEM, 'post')
+def suggest_at_iat(res, arguments):
+    shp = res.shape
+    if all(dim == 1 for dim in shp):
+        obj = config.ndim_to_obj.get(res.ndim, 'object')
+        ledger.teller(f"The shape of the returned {obj} from slicing is {shp} "
+                      f"Which suggests you are interested in the value and not "
+                      f"in a new {obj}. Try instead: <br>"
+                      f"<code>{obj}.at[row, col]</code>")
