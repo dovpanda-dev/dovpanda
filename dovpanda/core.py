@@ -1,3 +1,4 @@
+from dateutil.parser import parse
 from dovpanda import base
 from dovpanda.base import Ledger
 
@@ -86,3 +87,25 @@ def csv_index(res, arguments):
         if arguments.get('index_col') is None:
             ledger.tell('Your left most column is unnamed. This suggets it might be the index column, try: '
                         f'<code>pd.read_csv({filename}, index_col=0)</code>')
+
+
+@ledger.add_hint('DataFrame.insert')
+def data_in_date_format_insert(arguments):
+    column_name = arguments.get('column')
+    value = arguments.get('value')
+
+    value_array = np.asarray(value)
+
+    # check if exception rasied when trying to parse content
+    try:
+        list(map(parse, value_array))
+    except ValueError as e:
+        return
+    except TypeError as e:
+        return
+
+    if not np.issubdtype(value_array.dtype, np.datetime64):
+        # if there was no exception the content in a datetime format but not in datetime type
+        ledger.tell(
+            "You entered value in a struct of datetime but the type is somthing different. "
+            f"Try using <code>pd.to_datetime(df.{column_name})</code>")
