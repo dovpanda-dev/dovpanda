@@ -4,7 +4,7 @@ import pathlib
 import re
 import sys
 import traceback
-from collections import defaultdict
+from collections import defaultdict, deque
 
 import pandas
 
@@ -29,16 +29,15 @@ class _Teller:
     def __init__(self):
         self.message = None
         self.set_output('display')
-        self.line = None
-        self.lineno = None
         self.verbose = True
+        self.caller = None
 
     def __repr__(self):
-        trace = self.if_verbose(f' (Line {self.lineno})')
+        trace = self.if_verbose(f' (Line {self.caller.lineno})')
         return self._strip_html(f'===== {self.message} ====={trace}')
 
     def __str__(self):
-        trace = self.if_verbose(f' (Line {self.lineno})')
+        trace = self.if_verbose(f' (Line {self.caller.lineno})')
         return f'{self._strip_html(self.message)}{trace}'
 
     def __call__(self, s):
@@ -48,7 +47,7 @@ class _Teller:
         return self.nice_output()
 
     def nice_output(self):
-        trace = f'<div style="font-size:0.7em;">Line {self.lineno}: <code>{self.line}</code> </div>'
+        trace = f'<div style="font-size:0.7em;">Line {self.caller.lineno}: <code>{self.caller.line}</code> </div>'
         trace = self.if_verbose(trace)
         html = f'''
         <div class="alert alert-info" role="alert">
@@ -109,7 +108,8 @@ class Ledger:
         self.hints = defaultdict(list)
         self.teller = _Teller()
         self.verbose = True
-        self.caller_filename = None
+        self.caller = None
+        self.memory = deque(maxlen=32)
 
     def replace(self, original, func_hooks: tuple):
         g = rgetattr(sys.modules['pandas'], original)
@@ -134,7 +134,7 @@ class Ledger:
 
         @functools.wraps(f)
         def run(*args, **kwargs):
-            caller = traceback.extract_stack()[-2]
+            caller = traceback.extract_stack()[-2]  # -1 is current function. -2 is the one before
             self._set_caller_details(caller)
             arguments = self._make_arguments(f, *args, **kwargs)
 
@@ -156,12 +156,11 @@ class Ledger:
         return sig.arguments
 
     def _set_caller_details(self, caller):
-        self.caller_filename = caller.filename
-        self.inner_pandas = self.caller_filename.startswith(PANDAS_DIR)
-        if self.caller_filename.startswith(PANDAS_DIR):
+        self.inner_pandas = caller.filename.startswith(PANDAS_DIR)
+        if self.inner_pandas:
             return
-        self.teller.line = caller.line
-        self.teller.lineno = caller.lineno
+        self.memory.append(caller)
+        self.teller.caller = caller
 
     # Output
     def tell(self, *args, **kwargs):
