@@ -4,16 +4,6 @@ from dovpanda.base import Ledger
 ledger = Ledger()
 
 
-@ledger.add_hint('DataFrame.__init__')
-def init_for_checks(*args, **kwargs):
-    ledger.tell('you have construted a df')
-
-
-@ledger.add_hint('DataFrame.__init__')
-def init_another(*args, **kwargs):
-    ledger.tell('another pre hook for init')
-
-
 @ledger.add_hint('DataFrame.iterrows')
 def iterrows_is_bad(*args, **kwargs):
     ledger.tell("iterrows is not recommended, and in the majority of cases will have better alternatives")
