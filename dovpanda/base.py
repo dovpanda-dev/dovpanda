@@ -134,7 +134,6 @@ class Ledger:
 
         @functools.wraps(f)
         def run(*args, **kwargs):
-            # caller = traceback.extract_stack()[-2]
             self._set_caller_details()
             arguments = self._get_arguments(f, *args, **kwargs)
 
