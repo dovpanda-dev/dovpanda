@@ -90,10 +90,14 @@ def csv_index(res, arguments):
 
 @ledger.add_hint(config.GET_ITEM, 'post')
 def suggest_at_iat(res, arguments):
+    self = arguments.get('self')
     shp = res.shape
+    if res.ndim < 1:  # Sometimes specific slicing will return value
+        return
+    i = 'i' if isinstance(self, type(res.iloc)) else ''  # Help the user with at and iat
     if all(dim == 1 for dim in shp):
         obj = config.ndim_to_obj.get(res.ndim, 'object')
         ledger.teller(f"The shape of the returned {obj} from slicing is {shp} "
                       f"Which suggests you are interested in the value and not "
                       f"in a new {obj}. Try instead: <br>"
-                      f"<code>{obj}.at[row, col]</code>")
+                      f"<code>{obj}.{i}at[row, col]</code>")
