@@ -173,14 +173,6 @@ class Ledger:
         self.teller.verbose = verbose
 
 
-def get_arg(args, kwargs, which_arg, which_kwarg):
-    try:
-        ret = args[which_arg]
-    except IndexError:
-        ret = kwargs.get(which_kwarg)
-    return ret
-
-
 def rgetattr(obj, attr):
     attributes = attr.strip('.').split('.')
     for att in attributes:
