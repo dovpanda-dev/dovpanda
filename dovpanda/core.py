@@ -1,4 +1,6 @@
+import numpy as np
 from dateutil.parser import parse
+
 from dovpanda import base
 from dovpanda.base import Ledger
 
