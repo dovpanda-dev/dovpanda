@@ -109,6 +109,7 @@ class Ledger:
         self.teller = _Teller()
         self.verbose = True
         self.caller = None
+        # TODO: Memory has a cache only of registered methods. Change to accomodate all pandas
         self.memory = deque(maxlen=32)
 
     def replace(self, original, func_hooks: tuple):
