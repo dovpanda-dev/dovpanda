@@ -1,4 +1,4 @@
-from dovpanda import base
+from dovpanda import base, config
 from dovpanda.base import Ledger
 
 ledger = Ledger()
@@ -88,19 +88,19 @@ def csv_index(res, arguments):
                         f'<code>pd.read_csv({filename}, index_col=0)</code>')
 
 
-@ledger.add_hint('read_csv', 'post')  # TODO: more pd creations
-def suggest_category_dtype(res, *args, **kwargs):
+@ledger.add_hint(config.DF_CREATION, 'post')
+def suggest_category_dtype(res, arguments):
     rows = res.shape[0]
-    threshold = int(rows / 4) + 1
+    threshold = int(rows / config.CATEGORY_SHARE_THRESHOLD) + 1
     obj_type = (res.select_dtypes('object')
                 .nunique()
-                .loc[lambda x: x < threshold]
+                .loc[lambda x: x <= threshold]
                 .to_dict())
     for col, uniques in obj_type.items():
         if uniques == 2:
             dtype = 'boolean'
             arbitrary = res.loc[:, col].at[0]
-            code = f"df['{col}'] = (df['{col}'] == {arbitrary})"
+            code = f"df['{col}'] = (df['{col}'] == '{arbitrary}')"
         else:
             dtype = 'categorical'
             code = f"df['{col}'] = df['{col}'].astype('category')"
