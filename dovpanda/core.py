@@ -1,7 +1,8 @@
 import numpy as np
 from dateutil.parser import parse
 from dovpanda import base, config
-from dovpanda.base import Ledger
+from dovpanda.base import Ledger, MAX_CSV_SIZE
+from os.path import getsize
 
 ledger = Ledger()
 
@@ -89,6 +90,13 @@ def csv_index(res, arguments):
             ledger.tell('Your left most column is unnamed. This suggets it might be the index column, try: '
                         f'<code>pd.read_csv({filename}, index_col=0)</code>')
 
+
+@ledger.add_hint('read_csv', 'pre')
+def check_csv_size(arguments):
+    filename = arguments.get('filepath_or_buffer')
+    if getsize(filename) > MAX_CSV_SIZE:
+        ledger.tell('File size is very large. To avoid format issues before the complete file loades, '
+                    f'try:  <code>pd.read_csv({filename}, nrows=5)</code>')
 
 
 @ledger.add_hint(config.DF_CREATION, 'post')
