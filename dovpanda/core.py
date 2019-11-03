@@ -1,5 +1,6 @@
 import numpy as np
 from dateutil.parser import parse
+
 from dovpanda import base, config
 from dovpanda.base import Ledger
 
@@ -90,7 +91,6 @@ def csv_index(res, arguments):
                         f'<code>pd.read_csv({filename}, index_col=0)</code>')
 
 
-
 @ledger.add_hint(config.DF_CREATION, 'post')
 def suggest_category_dtype(res, arguments):
     rows = res.shape[0]
@@ -113,6 +113,7 @@ def suggest_category_dtype(res, arguments):
                    f"<code>{code}</code>")
         ledger.tell(message)
 
+
 @ledger.add_hint('DataFrame.insert')
 def data_in_date_format_insert(arguments):
     column_name = arguments.get('column')
@@ -123,9 +124,9 @@ def data_in_date_format_insert(arguments):
     # check if exception rasied when trying to parse content
     try:
         list(map(parse, value_array))
-    except ValueError as e:
+    except ValueError:
         return
-    except TypeError as e:
+    except TypeError:
         return
 
     if not np.issubdtype(value_array.dtype, np.datetime64):
@@ -133,4 +134,3 @@ def data_in_date_format_insert(arguments):
         ledger.tell(
             "You entered value in a struct of datetime but the type is somthing different. "
             f"Try using <code>pd.to_datetime(df.{column_name})</code>")
-
