@@ -63,6 +63,7 @@ class _Teller:
 
     @staticmethod
     def _strip_html(s):
+        s = re.sub(r'<br>', r'\n', s)
         return re.sub('<[^<]+?>', '', s)
 
     @staticmethod
@@ -109,6 +110,7 @@ class Ledger:
         self.teller = _Teller()
         self.verbose = True
         self.caller = None
+        # TODO: Memory has a cache only of registered methods. Change to accomodate all pandas
         self.memory = deque(maxlen=32)
 
     def replace(self, original, func_hooks: tuple):
@@ -172,14 +174,6 @@ class Ledger:
 
     def set_verbose(self, verbose=True):
         self.teller.verbose = verbose
-
-
-def get_arg(args, kwargs, which_arg, which_kwarg):
-    try:
-        ret = args[which_arg]
-    except IndexError:
-        ret = kwargs.get(which_kwarg)
-    return ret
 
 
 def rgetattr(obj, attr):

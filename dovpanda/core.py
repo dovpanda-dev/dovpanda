@@ -1,4 +1,7 @@
-from dovpanda import base
+import numpy as np
+from dateutil.parser import parse
+
+from dovpanda import base, config
 from dovpanda.base import Ledger
 
 ledger = Ledger()
@@ -62,7 +65,7 @@ def wrong_concat_axis(arguments):
 
 @ledger.add_hint('DataFrame.__eq__')
 def df_check_equality(arguments):
-    print (arguments)
+    print(arguments)
     if isinstance(arguments.get('self'), type(arguments.get('other'))):
         ledger.tell(f'Calling df1 == df2 compares the objects element-wise. '
                     'If you need a boolean condition, try df1.equals(df2)')
@@ -86,3 +89,48 @@ def csv_index(res, arguments):
         if arguments.get('index_col') is None:
             ledger.tell('Your left most column is unnamed. This suggets it might be the index column, try: '
                         f'<code>pd.read_csv({filename}, index_col=0)</code>')
+
+
+@ledger.add_hint(config.DF_CREATION, 'post')
+def suggest_category_dtype(res, arguments):
+    rows = res.shape[0]
+    threshold = int(rows / config.CATEGORY_SHARE_THRESHOLD) + 1
+    obj_type = (res.select_dtypes('object')
+                .nunique()
+                .loc[lambda x: x <= threshold]
+                .to_dict())
+    for col, uniques in obj_type.items():
+        if uniques == 2:
+            dtype = 'boolean'
+            arbitrary = res.loc[:, col].at[0]
+            code = f"df['{col}'] = (df['{col}'] == '{arbitrary}')"
+        else:
+            dtype = 'categorical'
+            code = f"df['{col}'] = df['{col}'].astype('category')"
+        message = (f"Dataframe has {rows} rows. Column <code>{col}</code> has only {uniques} values "
+                   f"which suggests it's a {dtype} feature.<br>"
+                   f"After df is created, Consider converting it to {dtype} by using "
+                   f"<code>{code}</code>")
+        ledger.tell(message)
+
+
+@ledger.add_hint('DataFrame.insert')
+def data_in_date_format_insert(arguments):
+    column_name = arguments.get('column')
+    value = arguments.get('value')
+
+    value_array = np.asarray(value)
+
+    # check if exception rasied when trying to parse content
+    try:
+        list(map(parse, value_array))
+    except ValueError:
+        return
+    except TypeError:
+        return
+
+    if not np.issubdtype(value_array.dtype, np.datetime64):
+        # if there was no exception the content in a datetime format but not in datetime type
+        ledger.tell(
+            "You entered value in a struct of datetime but the type is somthing different. "
+            f"Try using <code>pd.to_datetime(df.{column_name})</code>")
