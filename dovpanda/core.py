@@ -1,3 +1,4 @@
+from dovpanda import base, config
 import numpy as np
 from dateutil.parser import parse
 
@@ -134,3 +135,18 @@ def data_in_date_format_insert(arguments):
         ledger.tell(
             "You entered value in a struct of datetime but the type is somthing different. "
             f"Try using <code>pd.to_datetime(df.{column_name})</code>")
+
+
+@ledger.add_hint(config.GET_ITEM, 'post')
+def suggest_at_iat(res, arguments):
+    self = arguments.get('self')
+    shp = res.shape
+    if res.ndim < 1:  # Sometimes specific slicing will return value
+        return
+    i = 'i' if isinstance(self, type(res.iloc)) else ''  # Help the user with at and iat
+    if all(dim == 1 for dim in shp):
+        obj = config.ndim_to_obj.get(res.ndim, 'object')
+        ledger.teller(f"The shape of the returned {obj} from slicing is {shp} "
+                      f"Which suggests you are interested in the value and not "
+                      f"in a new {obj}. Try instead: <br>"
+                      f"<code>{obj}.{i}at[row, col]</code>")
