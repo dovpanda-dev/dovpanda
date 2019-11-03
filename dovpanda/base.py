@@ -63,6 +63,7 @@ class _Teller:
 
     @staticmethod
     def _strip_html(s):
+        s = re.sub(r'<br>', r'\n', s)
         return re.sub('<[^<]+?>', '', s)
 
     @staticmethod
