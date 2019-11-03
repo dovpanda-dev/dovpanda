@@ -1,7 +1,7 @@
 ---
 name: Propose New Hint
 about: If you'd like to propose a new hint, please use this template.
-title: ''
+title: "[HINT]"
 labels: _Hints
 assignees: ''
 
@@ -15,7 +15,6 @@ assignees: ''
 
 # Hook Type
 <!-- will it run as pre-hook or post-hook -->
-# Brief Description
 
 # Design
 <!-- Provide a basic design (python/pseudo coe/etc.) for the hook function-->
