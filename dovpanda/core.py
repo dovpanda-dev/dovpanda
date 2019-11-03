@@ -1,7 +1,6 @@
 import numpy as np
 from dateutil.parser import parse
-
-from dovpanda import base
+from dovpanda import base, config
 from dovpanda.base import Ledger
 
 ledger = Ledger()
@@ -91,6 +90,29 @@ def csv_index(res, arguments):
                         f'<code>pd.read_csv({filename}, index_col=0)</code>')
 
 
+
+@ledger.add_hint(config.DF_CREATION, 'post')
+def suggest_category_dtype(res, arguments):
+    rows = res.shape[0]
+    threshold = int(rows / config.CATEGORY_SHARE_THRESHOLD) + 1
+    obj_type = (res.select_dtypes('object')
+                .nunique()
+                .loc[lambda x: x <= threshold]
+                .to_dict())
+    for col, uniques in obj_type.items():
+        if uniques == 2:
+            dtype = 'boolean'
+            arbitrary = res.loc[:, col].at[0]
+            code = f"df['{col}'] = (df['{col}'] == '{arbitrary}')"
+        else:
+            dtype = 'categorical'
+            code = f"df['{col}'] = df['{col}'].astype('category')"
+        message = (f"Dataframe has {rows} rows. Column <code>{col}</code> has only {uniques} values "
+                   f"which suggests it's a {dtype} feature.<br>"
+                   f"After df is created, Consider converting it to {dtype} by using "
+                   f"<code>{code}</code>")
+        ledger.tell(message)
+
 @ledger.add_hint('DataFrame.insert')
 def data_in_date_format_insert(arguments):
     column_name = arguments.get('column')
@@ -111,3 +133,4 @@ def data_in_date_format_insert(arguments):
         ledger.tell(
             "You entered value in a struct of datetime but the type is somthing different. "
             f"Try using <code>pd.to_datetime(df.{column_name})</code>")
+
