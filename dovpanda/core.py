@@ -1,6 +1,6 @@
 import numpy as np
 from dateutil.parser import parse
-from dovpanda import base
+from dovpanda import base, config
 from dovpanda.base import Ledger
 
 ledger = Ledger()
