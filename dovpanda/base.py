@@ -9,7 +9,6 @@ from collections import defaultdict, deque
 import pandas
 
 PANDAS_DIR = str(pathlib.Path(pandas.__file__).parent.absolute())
-MAX_CSV_SIZE = 500000
 try:  # If user runs from notebook they will have this
     from IPython.display import display
 except (ModuleNotFoundError, ImportError):
