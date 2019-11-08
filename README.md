@@ -20,8 +20,8 @@ find easier ways to write your code.
 ## Usage
 
 ### Hints
-The basic usage of `dovpanda` is its hints mechanism, which is very easy and works out-of-the-box.
-Just import it after you import pandas
+The main usage of `dovpanda` is its hints mechanism, which is very easy and works out-of-the-box.
+Just import it after you import pandas, whether inside a notebook or in a console.
 
 ```python
 import pandas as pd
@@ -29,7 +29,11 @@ import dovpanda
 ```     
 This is it. From now on you can expect `dovpanda` to come with helpful hints while you are writing you code.
 
-### Example
+### Notebook
+Running `dovpanda` in a notebook environment will display rendered dismissable html.  
+![random tip](https://github.com/dovpanda-dev/dovpanda/blob/master/img/readme_example.png)
+
+### Console
 ```python
 df = pd.DataFrame({'a':list('xxyy'),'b':[40,50,60,70], 'time':['18:02','18:45','20:12','21:50']})
 df['time'] = pd.to_datetime(df.time)
@@ -47,19 +51,18 @@ hour
 Name: b, dtype: int64
 ```
 
-### Notebook Support
-Running `dovpanda` in a notebook environment will display rendered dismissable html.
-<img width="800" alt="notebook display" src="https://user-images.githubusercontent.com/7852981/67240707-aee52e80-f45a-11e9-9f6b-8dca0b9af3d5.png">
+
+
 
 ## Advanced Usage
 ### Random Tips
-`dovpanda.tip()` will give you a random `pandas` tip.
+`dovpanda.tip()` will give you a random `pandas` tip.  
 ![random tip](https://github.com/dovpanda-dev/dovpanda/blob/master/img/readme_tip.png)
 
 ### Change Display
 use `dovpanda.set_output` if you want to change output.
 
-```python
+```
 In [14]: dovpanda.set_output('display')
 In [15]: df.iterrows()
 ===== iterrows is not recommended, and in the majority of cases will have better alternatives =====
@@ -79,9 +82,13 @@ In [20]: dovpanda.set_output('off')
 
 In [21]: df.iterrows()
 Out[21]: <generator object DataFrame.iterrows at 0x1047c4d68>
-```
- 
-## Other Packages 
 
+```
+
+<hr> 
+
+#### BTW
+
+"dov" means bear in Hebrew
 
 
