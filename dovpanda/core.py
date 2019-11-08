@@ -1,9 +1,10 @@
+import os
+
 import numpy as np
 from dateutil.parser import parse
 
 from dovpanda import base, config
 from dovpanda.base import Ledger
-import os
 
 ledger = Ledger()
 
@@ -31,12 +32,14 @@ def time_grouping(arguments):
                 f"index and then use df.resample('time abbrevations'), for example:<br>"
                 f"<code>df.set_index('date').resample('h')</code>")
 
+
 @ledger.add_hint('concat', hook_type='post')
 def duplicate_index_after_concat(res, arguments):
     if res.index.nunique() != len(res.index):
         ledger.tell('After concatenation you have duplicated indexes values - pay attention')
     if res.columns.nunique() != len(res.columns):
         ledger.tell('After concatenation you have duplicated column names - pay attention')
+
 
 @ledger.add_hint('concat')
 def concat_single_column(arguments):
@@ -47,6 +50,7 @@ def concat_single_column(arguments):
         ledger.tell(
             'One of the dataframes you are concatenating is with a single column, '
             'consider using `df.assign()` or `df.insert()`')
+
 
 @ledger.add_hint('concat')
 def wrong_concat_axis(arguments):
@@ -71,6 +75,7 @@ def wrong_concat_axis(arguments):
         ledger.tell("All dataframes have the same columns and same number of rows. "
                     f"Pay attention, your axis is {axis} which concatenates {axis_translation[axis]}")
 
+
 @ledger.add_hint('DataFrame.__eq__')
 def df_check_equality(arguments):
     print(arguments)
@@ -78,11 +83,13 @@ def df_check_equality(arguments):
         ledger.tell(f'Calling df1 == df2 compares the objects element-wise. '
                     'If you need a boolean condition, try df1.equals(df2)')
 
+
 @ledger.add_hint('Series.__eq__')
 def series_check_equality(arguments):
     if isinstance(arguments.get('self'), type(arguments.get('other'))):
         ledger.tell(f'Calling series1 == series2 compares the objects element-wise. '
                     'If you need a boolean condition, try series1.equals(series2)')
+
 
 @ledger.add_hint('read_csv', 'post')
 def csv_index(res, arguments):
@@ -131,6 +138,7 @@ def suggest_category_dtype(res, arguments):
                    f"<code>{code}</code>")
         ledger.tell(message)
 
+
 @ledger.add_hint('DataFrame.insert')
 def data_in_date_format_insert(arguments):
     column_name = arguments.get('column')
@@ -151,6 +159,7 @@ def data_in_date_format_insert(arguments):
         ledger.tell(
             f"{column_name} looks like a datetime but the type is '{value_array.dtype}' "
             f"Consider using <code>pd.to_datetime(df.{column_name})</code>")
+
 
 @ledger.add_hint(config.GET_ITEM, 'post')
 def suggest_at_iat(res, arguments):
