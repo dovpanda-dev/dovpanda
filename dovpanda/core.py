@@ -2,7 +2,7 @@ import numpy as np
 from dateutil.parser import parse
 from dovpanda import base, config
 from dovpanda.base import Ledger
-from os.path import getsize
+import os
 
 ledger = Ledger()
 
@@ -94,7 +94,7 @@ def csv_index(res, arguments):
 @ledger.add_hint('read_csv', 'pre')
 def check_csv_size(arguments):
     filename = arguments.get('filepath_or_buffer')
-    if getsize(filename) > config.MAX_CSV_SIZE:
+    if os.path.getsize(filename) > config.MAX_CSV_SIZE:
         ledger.tell('File size is very large and may take time to load. '
                     'If you would like To avoid format issues before the complete file loads, '
                     f'try:  <code>pd.read_csv({filename}, nrows=5)</code> to check schema is as expected.')
