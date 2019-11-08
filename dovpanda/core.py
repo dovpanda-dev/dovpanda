@@ -1,4 +1,3 @@
-from dovpanda import base, config
 import numpy as np
 from dateutil.parser import parse
 
@@ -92,14 +91,17 @@ def csv_index(res, arguments):
                         f'<code>pd.read_csv({filename}, index_col=0)</code>')
 
 
-@ledger.add_hint(config.DF_CREATION, 'post')
+@ledger.add_hint(config.READ_METHODS, 'post')
 def suggest_category_dtype(res, arguments):
     rows = res.shape[0]
     threshold = int(rows / config.CATEGORY_SHARE_THRESHOLD) + 1
-    obj_type = (res.select_dtypes('object')
-                .nunique()
-                .loc[lambda x: x <= threshold]
-                .to_dict())
+    col_uniques = res.select_dtypes('object').nunique()
+    if col_uniques.empty:
+        return
+    else:
+        obj_type = (col_uniques
+                    .loc[lambda x: x <= threshold]
+                    .to_dict())
     for col, uniques in obj_type.items():
         if uniques == 2:
             dtype = 'boolean'
@@ -133,8 +135,8 @@ def data_in_date_format_insert(arguments):
     if not np.issubdtype(value_array.dtype, np.datetime64):
         # if there was no exception the content in a datetime format but not in datetime type
         ledger.tell(
-            "You entered value in a struct of datetime but the type is somthing different. "
-            f"Try using <code>pd.to_datetime(df.{column_name})</code>")
+            f"{column_name} looks like a datetime but the type is '{value_array.dtype}' "
+            f"Consider using <code>pd.to_datetime(df.{column_name})</code>")
 
 
 @ledger.add_hint(config.GET_ITEM, 'post')
@@ -146,7 +148,7 @@ def suggest_at_iat(res, arguments):
     i = 'i' if isinstance(self, type(res.iloc)) else ''  # Help the user with at and iat
     if all(dim == 1 for dim in shp):
         obj = config.ndim_to_obj.get(res.ndim, 'object')
-        ledger.teller(f"The shape of the returned {obj} from slicing is {shp} "
-                      f"Which suggests you are interested in the value and not "
-                      f"in a new {obj}. Try instead: <br>"
-                      f"<code>{obj}.{i}at[row, col]</code>")
+        ledger.tell(f"The shape of the returned {obj} from slicing is {shp} "
+                    f"Which suggests you are interested in the value and not "
+                    f"in a new {obj}. Try instead: <br>"
+                    f"<code>{obj}.{i}at[row, col]</code>")
