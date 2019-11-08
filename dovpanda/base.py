@@ -112,9 +112,11 @@ class Ledger:
         self.caller = None
         # TODO: Memory has a cache only of registered methods. Change to accomodate all pandas
         self.memory = deque(maxlen=32)
+        self.original_methods = dict()
 
-    def replace(self, original, func_hooks: tuple):
+    def replace(self, original, func_hooks):
         g = rgetattr(sys.modules['pandas'], original)
+        self.save_original(original, g)
         rsetattr(sys.modules['pandas'], original, self.attach_hooks(g, func_hooks))
 
     def add_hint(self, originals, hook_type='pre'):
@@ -174,6 +176,17 @@ class Ledger:
 
     def set_verbose(self, verbose=True):
         self.teller.verbose = verbose
+
+    def save_original(self, original_name, original_function):
+        if original_name in self.original_methods:
+            return
+        else:
+            self.original_methods[original_name] = original_function
+
+    def revert(self):
+        """Revert the ledger. Register original pandas methods back to their namespace"""
+        for original_name, original_func in self.original_methods.items():
+            rsetattr(sys.modules['pandas'], original_name, original_func)
 
 
 def rgetattr(obj, attr):
