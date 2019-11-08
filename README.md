@@ -54,6 +54,7 @@ Running `dovpanda` in a notebook environment will display rendered dismissable h
 ## Advanced Usage
 ### Random Tips
 `dovpanda.tip()` will give you a random `pandas` tip.
+![random tip](https://github.com/dovpanda-dev/dovpanda/blob/master/img/readme_tip.png)
 
 ### Change Display
 use `dovpanda.set_output` if you want to change output.

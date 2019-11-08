@@ -2,7 +2,7 @@ __author__ = """Dean Langsam"""
 __version__ = '0.0.3.beta'
 
 import sys
-
+from dovpanda import tips
 from dovpanda.core import ledger
 
 if 'pandas' in sys.modules.keys():
@@ -13,3 +13,6 @@ else:
 
 def set_output(tell_method):
     ledger.set_output(tell_method)
+
+def tip():
+    return tips.random_tip()
