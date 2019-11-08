@@ -1,33 +1,60 @@
-try:
-    import requests
-
-    HAS_REQUESTS = True
-except ModuleNotFoundError:
-    HAS_REQUESTS = False
-
+import os
+import pathlib
+import re
+import random
 
 class Tip:
-    def __init__(self, text=None, url=None):
-        self.text = text
-        self.url = url
+    def __init__(self, html=None, ref_url=None, ref_name=None):
+        self.html = html
+        self.ref_url = ref_url
+        self.ref_name = ref_name
 
-    def get_url(self):
-        self.html = requests.get(self.url).content.decode("utf-8")
+    @staticmethod
+    def parse_meta(meta):
+        meta = meta.split('\n')
+        meta = [kv.split(': ') for kv in meta]
+        meta = {k: v for k, v in meta}
+        return meta
 
-    def _repr_html_(self):
+    @classmethod
+    def from_file(cls, path):
+        with open(path, 'r') as f:
+            html = f.read()  # .split('\n')
+            try:
+                meta, content = re.split(r'\n-{3,}\n', html, maxsplit=1)
+            except (IndexError, ValueError):
+                return cls('parse error', '', '')
+        meta = cls.parse_meta(meta)
+        return cls(content, **meta)
+
+    def __repr__(self):
         return self.html
 
-class TextTip(Tip):
-    pass
+    def _repr_html_(self):
+        return self.nice_output()
 
-class TwitterTip(Tip):
-        def __init__(self, tweet_id):
-            super().__init__()
-            self.tweet_id  = tweet_id
-        def get_html(self):
-            url = f'https://publish.twitter.com/?query=https%3A%2F%2Ftwitter.com%2Fdovpanda%2Fstatus%2F{self.tweet_id}&widget=Tweet'
-            self.html = requests.get(url).content.decode("utf-8")
+    def nice_output(self):
+        html = f'''
+        <div class="alert alert-warning" role="alert">
+          {self.html}
 
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        
+        </div>
+                  <p>
+            Source: <a href="{self.ref_url}" target="_blank">{self.ref_name}</a>
+          </p>
+        '''
+        return html
 
-Tip('abc','https://twitter.com/justmarkham/status/1168930165658914816')
-TwitterTip('1168930165658914816')
+def random_tip():
+    tip_list = pathlib.Path(__file__).parent / 'tip_files'
+    tip_list = list(tip_list.iterdir())
+    tip_file = random.choice(tip_list)
+    tip = Tip.from_file(tip_file)
+    return tip
+
+if __name__ == '__main__':
+    random_tip()
