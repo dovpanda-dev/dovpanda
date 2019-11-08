@@ -54,7 +54,7 @@ Name: b, dtype: int64
 
 
 
-## Advanced Usage
+## Extended Usage
 ### Random Tips
 `dovpanda.tip()` will give you a random `pandas` tip.  
 ![random tip](https://github.com/dovpanda-dev/dovpanda/blob/master/img/readme_tip.png)
