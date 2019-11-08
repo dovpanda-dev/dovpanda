@@ -1,5 +1,6 @@
 import numpy as np
 from dateutil.parser import parse
+
 from dovpanda import base, config
 from dovpanda.base import Ledger
 from os.path import getsize
@@ -14,11 +15,21 @@ def iterrows_is_bad(arguments):
 
 @ledger.add_hint('DataFrame.groupby')
 def time_grouping(arguments):
-    by = arguments.get('by')
-    base.listify(by)
-    if 'hour' in by:
-        ledger.tell('Seems like you are grouping by time, consider using resample')
+    by = base.setify(arguments.get('by'))
+    time_cols = set(config.TIME_COLUMNS).intersection(by)
+    l = len(time_cols)
+    cols = ', '.join([str(col) for col in time_cols])
+    if l <= 0:
+        return
+    elif l == 1:
+        first_line = f"a column"
+    else:
+        first_line = f"columns"
 
+    ledger.tell(f"Seems like you are grouping by {first_line} named <strong>{cols}</strong>.<br>"
+                f"consider setting the time column as"
+                f"index and then use df.resample('time abbrevations'), for example:<br>"
+                f"<code>df.set_index('date').resample('h')</code>")
 
 @ledger.add_hint('concat', hook_type='post')
 def duplicate_index_after_concat(res, arguments):
@@ -26,7 +37,6 @@ def duplicate_index_after_concat(res, arguments):
         ledger.tell('After concatenation you have duplicated indexes values - pay attention')
     if res.columns.nunique() != len(res.columns):
         ledger.tell('After concatenation you have duplicated column names - pay attention')
-
 
 @ledger.add_hint('concat')
 def concat_single_column(arguments):
@@ -37,7 +47,6 @@ def concat_single_column(arguments):
         ledger.tell(
             'One of the dataframes you are concatenating is with a single column, '
             'consider using `df.assign()` or `df.insert()`')
-
 
 @ledger.add_hint('concat')
 def wrong_concat_axis(arguments):
@@ -62,7 +71,6 @@ def wrong_concat_axis(arguments):
         ledger.tell("All dataframes have the same columns and same number of rows. "
                     f"Pay attention, your axis is {axis} which concatenates {axis_translation[axis]}")
 
-
 @ledger.add_hint('DataFrame.__eq__')
 def df_check_equality(arguments):
     print(arguments)
@@ -70,13 +78,11 @@ def df_check_equality(arguments):
         ledger.tell(f'Calling df1 == df2 compares the objects element-wise. '
                     'If you need a boolean condition, try df1.equals(df2)')
 
-
 @ledger.add_hint('Series.__eq__')
 def series_check_equality(arguments):
     if isinstance(arguments.get('self'), type(arguments.get('other'))):
         ledger.tell(f'Calling series1 == series2 compares the objects element-wise. '
                     'If you need a boolean condition, try series1.equals(series2)')
-
 
 @ledger.add_hint('read_csv', 'post')
 def csv_index(res, arguments):
@@ -100,14 +106,17 @@ def check_csv_size(arguments):
                     f'try:  <code>pd.read_csv({filename}, nrows=5)</code> to check schema is as expected.')
 
 
-@ledger.add_hint(config.DF_CREATION, 'post')
+@ledger.add_hint(config.READ_METHODS, 'post')
 def suggest_category_dtype(res, arguments):
     rows = res.shape[0]
     threshold = int(rows / config.CATEGORY_SHARE_THRESHOLD) + 1
-    obj_type = (res.select_dtypes('object')
-                .nunique()
-                .loc[lambda x: x <= threshold]
-                .to_dict())
+    col_uniques = res.select_dtypes('object').nunique()
+    if col_uniques.empty:
+        return
+    else:
+        obj_type = (col_uniques
+                    .loc[lambda x: x <= threshold]
+                    .to_dict())
     for col, uniques in obj_type.items():
         if uniques == 2:
             dtype = 'boolean'
@@ -132,14 +141,27 @@ def data_in_date_format_insert(arguments):
     # check if exception rasied when trying to parse content
     try:
         list(map(parse, value_array))
-    except ValueError as e:
+    except ValueError:
         return
-    except TypeError as e:
+    except TypeError:
         return
 
     if not np.issubdtype(value_array.dtype, np.datetime64):
         # if there was no exception the content in a datetime format but not in datetime type
         ledger.tell(
-            "You entered value in a struct of datetime but the type is somthing different. "
-            f"Try using <code>pd.to_datetime(df.{column_name})</code>")
+            f"{column_name} looks like a datetime but the type is '{value_array.dtype}' "
+            f"Consider using <code>pd.to_datetime(df.{column_name})</code>")
 
+@ledger.add_hint(config.GET_ITEM, 'post')
+def suggest_at_iat(res, arguments):
+    self = arguments.get('self')
+    shp = res.shape
+    if res.ndim < 1:  # Sometimes specific slicing will return value
+        return
+    i = 'i' if isinstance(self, type(res.iloc)) else ''  # Help the user with at and iat
+    if all(dim == 1 for dim in shp):
+        obj = config.ndim_to_obj.get(res.ndim, 'object')
+        ledger.tell(f"The shape of the returned {obj} from slicing is {shp} "
+                    f"Which suggests you are interested in the value and not "
+                    f"in a new {obj}. Try instead: <br>"
+                    f"<code>{obj}.{i}at[row, col]</code>")

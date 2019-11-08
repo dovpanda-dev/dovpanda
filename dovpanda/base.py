@@ -1,14 +1,13 @@
 import functools
 import inspect
-import pathlib
+import os
 import re
 import sys
-import traceback
 from collections import defaultdict, deque
 
 import pandas
 
-PANDAS_DIR = str(pathlib.Path(pandas.__file__).parent.absolute())
+PANDAS_DIR = os.path.dirname(inspect.getsourcefile(pandas))
 try:  # If user runs from notebook they will have this
     from IPython.display import display
 except (ModuleNotFoundError, ImportError):
@@ -47,7 +46,8 @@ class _Teller:
         return self.nice_output()
 
     def nice_output(self):
-        trace = f'<div style="font-size:0.7em;">Line {self.caller.lineno}: <code>{self.caller.line}</code> </div>'
+        code_context = self.caller.code_context[0].strip()
+        trace = f'<div style="font-size:0.7em;">Line {self.caller.lineno}: <code>{code_context}</code> </div>'
         trace = self.if_verbose(trace)
         html = f'''
         <div class="alert alert-info" role="alert">
@@ -112,9 +112,11 @@ class Ledger:
         self.caller = None
         # TODO: Memory has a cache only of registered methods. Change to accomodate all pandas
         self.memory = deque(maxlen=32)
+        self.original_methods = dict()
 
-    def replace(self, original, func_hooks: tuple):
+    def replace(self, original, func_hooks):
         g = rgetattr(sys.modules['pandas'], original)
+        self.save_original(original, g)
         rsetattr(sys.modules['pandas'], original, self.attach_hooks(g, func_hooks))
 
     def add_hint(self, originals, hook_type='pre'):
@@ -136,9 +138,8 @@ class Ledger:
 
         @functools.wraps(f)
         def run(*args, **kwargs):
-            caller = traceback.extract_stack()[-2]  # -1 is current function. -2 is the one before
-            self._set_caller_details(caller)
-            arguments = self._make_arguments(f, *args, **kwargs)
+            self._set_caller_details()
+            arguments = self._get_arguments(f, *args, **kwargs)
 
             if self.inner_pandas:
                 ret = f(*args, **kwargs)
@@ -152,17 +153,19 @@ class Ledger:
 
         return run
 
-    def _make_arguments(self, f, *args, **kwargs):
+    def _get_arguments(self, f, *args, **kwargs):
         sig = inspect.signature(f).bind(*args, **kwargs)
         sig.apply_defaults()
         return sig.arguments
 
-    def _set_caller_details(self, caller):
-        self.inner_pandas = caller.filename.startswith(PANDAS_DIR)
+    def _set_caller_details(self):
+        frame = inspect.currentframe().f_back.f_back
+        self.caller = inspect.getframeinfo(frame)
+        self.inner_pandas = self.caller.filename.startswith(PANDAS_DIR)
         if self.inner_pandas:
             return
-        self.memory.append(caller)
-        self.teller.caller = caller
+        self.memory.append(self.caller)
+        self.teller.caller = self.caller
 
     # Output
     def tell(self, *args, **kwargs):
@@ -173,6 +176,17 @@ class Ledger:
 
     def set_verbose(self, verbose=True):
         self.teller.verbose = verbose
+
+    def save_original(self, original_name, original_function):
+        if original_name in self.original_methods:
+            return
+        else:
+            self.original_methods[original_name] = original_function
+
+    def revert(self):
+        """Revert the ledger. Register original pandas methods back to their namespace"""
+        for original_name, original_func in self.original_methods.items():
+            rsetattr(sys.modules['pandas'], original_name, original_func)
 
 
 def rgetattr(obj, attr):
