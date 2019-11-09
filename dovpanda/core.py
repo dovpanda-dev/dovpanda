@@ -16,11 +16,11 @@ def iterrows_is_bad(arguments):
 def time_grouping(arguments):
     by = base.setify(arguments.get('by'))
     time_cols = set(config.TIME_COLUMNS).intersection(by)
-    l = len(time_cols)
+    num_cols = len(time_cols)
     cols = ', '.join([str(col) for col in time_cols])
-    if l <= 0:
+    if num_cols <= 0:
         return
-    elif l == 1:
+    elif num_cols == 1:
         first_line = f"a column"
     else:
         first_line = f"columns"
@@ -184,3 +184,11 @@ def suggest_at_iat(res, arguments):
                     f"Which suggests you are interested in the value and not "
                     f"in a new {obj}. Try instead: <br>"
                     f"<code>{obj}.{i}at[row, col]</code>")
+
+
+@ledger.add_hint(['DataFrame.append', 'concat'], stop_nudge=4)
+def dont_append_with_loop(arguments):
+    if ledger.similar >= 4:
+        ledger.tell('dont append or concat dfs iteratively. '
+                    'it is a better practice to first create a list of dfs. '
+                    'and then <code>pd.concat(list_of_dfs)</code> in one go')
