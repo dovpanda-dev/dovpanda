@@ -101,7 +101,7 @@ class _Teller:
         elif output_method == 'display':
             try:
                 self.output = display
-            except (ModuleNotFoundError, ImportError):
+            except NameError:
                 self.set_output('print')
         elif output_method == 'off':
             self.output = self._no_output
