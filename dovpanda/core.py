@@ -182,7 +182,6 @@ def data_in_date_format_read(res, arguments):
             tell_time_dtype(col, value_array)
 
 
-
 @ledger.add_hint(config.GET_ITEM, 'post')
 def suggest_at_iat(res, arguments):
     self = arguments.get('self')
