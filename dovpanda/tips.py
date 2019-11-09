@@ -1,7 +1,7 @@
-import os
 import pathlib
-import re
 import random
+import re
+
 
 class Tip:
     def __init__(self, html=None, ref_url=None, ref_name=None):
@@ -41,7 +41,6 @@ class Tip:
           <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
-        
         </div>
                   <p>
             Source: <a href="{self.ref_url}" target="_blank">{self.ref_name}</a>
@@ -49,12 +48,14 @@ class Tip:
         '''
         return html
 
+
 def random_tip():
     tip_list = pathlib.Path(__file__).parent / 'tip_files'
     tip_list = list(tip_list.iterdir())
     tip_file = random.choice(tip_list)
     tip = Tip.from_file(tip_file)
     return tip
+
 
 if __name__ == '__main__':
     random_tip()
