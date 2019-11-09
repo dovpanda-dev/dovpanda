@@ -16,11 +16,11 @@ def iterrows_is_bad(arguments):
 def time_grouping(arguments):
     by = base.setify(arguments.get('by'))
     time_cols = set(config.TIME_COLUMNS).intersection(by)
-    l = len(time_cols)
+    num_cols = len(time_cols)
     cols = ', '.join([str(col) for col in time_cols])
-    if l <= 0:
+    if num_cols <= 0:
         return
-    elif l == 1:
+    elif num_cols == 1:
         first_line = f"a column"
     else:
         first_line = f"columns"
