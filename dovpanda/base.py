@@ -4,7 +4,7 @@ import os
 import re
 import sys
 from collections import defaultdict, deque
-
+from dovpanda import config
 import pandas
 
 PANDAS_DIR = os.path.dirname(inspect.getsourcefile(pandas))
@@ -51,6 +51,7 @@ class _Teller:
         trace = self.if_verbose(trace)
         html = f'''
         <div class="alert alert-info" role="alert">
+        <img src="{config.logo}" alt="logo" style="float:left; margin-right:10px">
           {self.message}
           <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
