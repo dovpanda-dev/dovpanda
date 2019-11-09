@@ -3,6 +3,7 @@ import inspect
 import re
 import sys
 from collections import defaultdict, deque
+from contextlib import contextmanager
 
 from dovpanda import config
 
@@ -211,6 +212,17 @@ class Ledger:
         """Revert the ledger. Register original pandas methods back to their namespace"""
         for original_name, original_func in self.original_methods.items():
             rsetattr(sys.modules['pandas'], original_name, original_func)
+
+    @contextmanager
+    def mute(self):
+        current_output = self.teller.output
+        self.set_output('off')
+        try:
+            yield
+        except Exception as e:
+            raise e
+        finally:
+            self.set_output(current_output)
 
 
 def rgetattr(obj, attr):

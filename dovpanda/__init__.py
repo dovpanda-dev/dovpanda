@@ -21,6 +21,9 @@ def shutdown():
     ledger.revert()
 
 
+mute = ledger.mute
+
+
 def tip():
     return tips.random_tip()
 
