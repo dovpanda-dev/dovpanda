@@ -1,5 +1,5 @@
 import numpy as np
-from dateutil.parser import parse
+from dateutil import parser
 
 from dovpanda import base, config
 from dovpanda.base import Ledger
@@ -26,9 +26,10 @@ def time_grouping(arguments):
         first_line = f"columns"
 
     ledger.tell(f"Seems like you are grouping by {first_line} named <strong>{cols}</strong>.<br>"
-                f"consider setting the time column as"
+                f"consider setting the time column as "
                 f"index and then use df.resample('time abbrevations'), for example:<br>"
                 f"<code>df.set_index('date').resample('h')</code>")
+
 
 @ledger.add_hint('concat', hook_type='post')
 def duplicate_index_after_concat(res, arguments):
@@ -36,6 +37,7 @@ def duplicate_index_after_concat(res, arguments):
         ledger.tell('After concatenation you have duplicated indexes values - pay attention')
     if res.columns.nunique() != len(res.columns):
         ledger.tell('After concatenation you have duplicated column names - pay attention')
+
 
 @ledger.add_hint('concat')
 def concat_single_column(arguments):
@@ -46,6 +48,7 @@ def concat_single_column(arguments):
         ledger.tell(
             'One of the dataframes you are concatenating is with a single column, '
             'consider using `df.assign()` or `df.insert()`')
+
 
 @ledger.add_hint('concat')
 def wrong_concat_axis(arguments):
@@ -70,6 +73,7 @@ def wrong_concat_axis(arguments):
         ledger.tell("All dataframes have the same columns and same number of rows. "
                     f"Pay attention, your axis is {axis} which concatenates {axis_translation[axis]}")
 
+
 @ledger.add_hint('DataFrame.__eq__')
 def df_check_equality(arguments):
     print(arguments)
@@ -77,11 +81,13 @@ def df_check_equality(arguments):
         ledger.tell(f'Calling df1 == df2 compares the objects element-wise. '
                     'If you need a boolean condition, try df1.equals(df2)')
 
+
 @ledger.add_hint('Series.__eq__')
 def series_check_equality(arguments):
     if isinstance(arguments.get('self'), type(arguments.get('other'))):
         ledger.tell(f'Calling series1 == series2 compares the objects element-wise. '
                     'If you need a boolean condition, try series1.equals(series2)')
+
 
 @ledger.add_hint('read_csv', 'post')
 def csv_index(res, arguments):
@@ -94,6 +100,7 @@ def csv_index(res, arguments):
         if arguments.get('index_col') is None:
             ledger.tell('Your left most column is unnamed. This suggets it might be the index column, try: '
                         f'<code>pd.read_csv({filename}, index_col=0)</code>')
+
 
 @ledger.add_hint(config.READ_METHODS, 'post')
 def suggest_category_dtype(res, arguments):
@@ -120,26 +127,49 @@ def suggest_category_dtype(res, arguments):
                    f"<code>{code}</code>")
         ledger.tell(message)
 
+
+def is_date_time_format(arr):
+    """
+    Check if a given array is a in a datetime format
+    Parameters
+    ----------
+    arr
+
+    Returns
+    -------
+
+    """
+    try:
+        list(map(parser.parse, arr))
+    except (ValueError, TypeError):
+        return False
+    return True
+
+
+def tell_time_dtype(col_name, arr):
+    if not np.issubdtype(arr.dtype, np.datetime64):
+        # Tthe content is in a datetime format but not in datetime type
+        ledger.tell(f"columns '{col_name}' looks like a datetime but the type is '{arr.dtype}' "
+                    f"Consider using<br>"
+                    f"<code>df['{col_name}'] = pd.to_datetime(df.{col_name})</code>")
+
+
 @ledger.add_hint('DataFrame.insert')
 def data_in_date_format_insert(arguments):
     column_name = arguments.get('column')
     value = arguments.get('value')
-
     value_array = np.asarray(value)
+    if is_date_time_format(value_array):
+        tell_time_dtype(column_name, value_array)
 
-    # check if exception rasied when trying to parse content
-    try:
-        list(map(parse, value_array))
-    except ValueError:
-        return
-    except TypeError:
-        return
 
-    if not np.issubdtype(value_array.dtype, np.datetime64):
-        # if there was no exception the content in a datetime format but not in datetime type
-        ledger.tell(
-            f"{column_name} looks like a datetime but the type is '{value_array.dtype}' "
-            f"Consider using <code>pd.to_datetime(df.{column_name})</code>")
+@ledger.add_hint(config.READ_METHODS, 'post')
+def data_in_date_format_read(res, arguments):
+    for col in res.columns:
+        value_array = np.asarray(res[col])
+        if is_date_time_format(value_array):
+            tell_time_dtype(col, value_array)
+
 
 @ledger.add_hint(config.GET_ITEM, 'post')
 def suggest_at_iat(res, arguments):
