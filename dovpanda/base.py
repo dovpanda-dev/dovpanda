@@ -1,15 +1,12 @@
 import functools
 import inspect
-import os
 import re
 import sys
 from collections import defaultdict, deque
-
-import pandas
+from contextlib import contextmanager
 
 from dovpanda import config
 
-PANDAS_DIR = os.path.dirname(inspect.getsourcefile(pandas))
 try:  # If user runs from notebook they will have this
     from IPython.display import display
 except (ModuleNotFoundError, ImportError):
@@ -17,13 +14,18 @@ except (ModuleNotFoundError, ImportError):
 
 
 class Hint:
-    def __init__(self, original, hook_type, replacement):
+    def __init__(self, original, hook_type, replacement, *, stop_nudge=1):
         accepted_hooks = ['pre', 'post']
         assert hook_type in accepted_hooks, f'hook_type must be one of {accepted_hooks}'
 
         self.original = original
         self.hook_type = hook_type
         self.replacement = replacement
+        self.stop_nudge = stop_nudge
+
+    def __repr__(self):
+        return (f"[HINT] replaces {self.original} with {self.replacement} "
+                f"at {self.hook_type} but stops after {self.stop_nudge}")
 
 
 class _Teller:
@@ -126,10 +128,11 @@ class Ledger:
         self.save_original(original, g)
         rsetattr(sys.modules['pandas'], original, self.attach_hooks(g, func_hooks))
 
-    def add_hint(self, originals, hook_type='pre'):
+    def add_hint(self, originals, hook_type='pre', stop_nudge=1):
 
         def replaces_decorator(replacement):
-            hint = Hint(original=originals, hook_type=hook_type, replacement=replacement)
+            hint = Hint(original=originals, hook_type=hook_type, replacement=replacement,
+                        stop_nudge=stop_nudge)
             for original in listify(originals):
                 self.hints[original].append(hint)
 
@@ -140,22 +143,24 @@ class Ledger:
             self.replace(original, func_hooks)
 
     def attach_hooks(self, f, func_hooks):
-        pres = [hook.replacement for hook in func_hooks if hook.hook_type == 'pre']
-        posts = [hook.replacement for hook in func_hooks if hook.hook_type == 'post']
+        pres = [hook for hook in func_hooks if hook.hook_type == 'pre']
+        posts = [hook for hook in func_hooks if hook.hook_type == 'post']
 
         @functools.wraps(f)
         def run(*args, **kwargs):
-            self._set_caller_details()
+            self._set_caller_details(f)
             arguments = self._get_arguments(f, *args, **kwargs)
 
-            if self.inner_pandas:
+            if self.resticted_dirs():
                 ret = f(*args, **kwargs)
             else:
                 for pre in pres:
-                    pre(arguments)
+                    if self.similar <= pre.stop_nudge:
+                        pre.replacement(arguments)
                 ret = f(*args, **kwargs)
                 for post in posts:
-                    post(ret, arguments)
+                    if self.similar <= post.stop_nudge:
+                        post.replacement(ret, arguments)
             return ret
 
         return run
@@ -165,16 +170,29 @@ class Ledger:
         sig.apply_defaults()
         return sig.arguments
 
-    def _set_caller_details(self):
+    def _set_caller_details(self, f):
         frame = inspect.currentframe().f_back.f_back
         self.caller = inspect.getframeinfo(frame)
-        self.inner_pandas = self.caller.filename.startswith(PANDAS_DIR)
-        if self.inner_pandas:
+        if self.resticted_dirs():
             return
-        self.memory.append(self.caller)
+        self._update_memory(f)
         self.teller.caller = self.caller
 
+    def _update_memory(self, f):
+        self.memory.append((f, self.caller))
+        latest = self.memory[-1]
+        similar = [caller for caller in self.memory if caller == latest]
+        similar = len(similar)
+        self.similar = similar
+
+    def resticted_dirs(self):
+        caller_file = self.caller.filename
+        if any([caller_file.startswith(str(dir_name)) for dir_name in config.RESTRICTED_DIRS]):
+            return True
+        return False
+
     # Output
+
     def tell(self, *args, **kwargs):
         self.teller(*args, *kwargs)
 
@@ -194,6 +212,17 @@ class Ledger:
         """Revert the ledger. Register original pandas methods back to their namespace"""
         for original_name, original_func in self.original_methods.items():
             rsetattr(sys.modules['pandas'], original_name, original_func)
+
+    @contextmanager
+    def mute(self):
+        current_output = self.teller.output
+        self.set_output('off')
+        try:
+            yield
+        except Exception as e:
+            raise e
+        finally:
+            self.set_output(current_output)
 
 
 def rgetattr(obj, attr):

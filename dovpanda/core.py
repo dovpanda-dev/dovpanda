@@ -1,7 +1,7 @@
 import os
 
 import numpy as np
-from dateutil.parser import parse
+from dateutil import parser
 
 from dovpanda import base, config
 from dovpanda.base import Ledger
@@ -18,17 +18,17 @@ def iterrows_is_bad(arguments):
 def time_grouping(arguments):
     by = base.setify(arguments.get('by'))
     time_cols = set(config.TIME_COLUMNS).intersection(by)
-    l = len(time_cols)
+    num_cols = len(time_cols)
     cols = ', '.join([str(col) for col in time_cols])
-    if l <= 0:
+    if num_cols <= 0:
         return
-    elif l == 1:
+    elif num_cols == 1:
         first_line = f"a column"
     else:
         first_line = f"columns"
 
     ledger.tell(f"Seems like you are grouping by {first_line} named <strong>{cols}</strong>.<br>"
-                f"consider setting the time column as"
+                f"consider setting the time column as "
                 f"index and then use df.resample('time abbrevations'), for example:<br>"
                 f"<code>df.set_index('date').resample('h')</code>")
 
@@ -139,26 +139,48 @@ def suggest_category_dtype(res, arguments):
         ledger.tell(message)
 
 
+def is_date_time_format(arr):
+    """
+    Check if a given array is a in a datetime format
+    Parameters
+    ----------
+    arr
+
+    Returns
+    -------
+
+    """
+    try:
+        list(map(parser.parse, arr))
+    except (ValueError, TypeError):
+        return False
+    return True
+
+
+def tell_time_dtype(col_name, arr):
+    if not np.issubdtype(arr.dtype, np.datetime64):
+        # Tthe content is in a datetime format but not in datetime type
+        ledger.tell(f"columns '{col_name}' looks like a datetime but the type is '{arr.dtype}' "
+                    f"Consider using<br>"
+                    f"<code>df['{col_name}'] = pd.to_datetime(df.{col_name})</code>")
+
+
 @ledger.add_hint('DataFrame.insert')
 def data_in_date_format_insert(arguments):
     column_name = arguments.get('column')
     value = arguments.get('value')
-
     value_array = np.asarray(value)
+    if is_date_time_format(value_array):
+        tell_time_dtype(column_name, value_array)
 
-    # check if exception rasied when trying to parse content
-    try:
-        list(map(parse, value_array))
-    except ValueError:
-        return
-    except TypeError:
-        return
 
-    if not np.issubdtype(value_array.dtype, np.datetime64):
-        # if there was no exception the content in a datetime format but not in datetime type
-        ledger.tell(
-            f"{column_name} looks like a datetime but the type is '{value_array.dtype}' "
-            f"Consider using <code>pd.to_datetime(df.{column_name})</code>")
+@ledger.add_hint(config.READ_METHODS, 'post')
+def data_in_date_format_read(res, arguments):
+    for col in res.columns:
+        value_array = np.asarray(res[col])
+        if is_date_time_format(value_array):
+            tell_time_dtype(col, value_array)
+
 
 
 @ledger.add_hint(config.GET_ITEM, 'post')
@@ -174,3 +196,11 @@ def suggest_at_iat(res, arguments):
                     f"Which suggests you are interested in the value and not "
                     f"in a new {obj}. Try instead: <br>"
                     f"<code>{obj}.{i}at[row, col]</code>")
+
+
+@ledger.add_hint(['DataFrame.append', 'concat'], stop_nudge=4)
+def dont_append_with_loop(arguments):
+    if ledger.similar >= 4:
+        ledger.tell('dont append or concat dfs iteratively. '
+                    'it is a better practice to first create a list of dfs. '
+                    'and then <code>pd.concat(list_of_dfs)</code> in one go')

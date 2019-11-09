@@ -1,5 +1,5 @@
 __author__ = """Dean Langsam"""
-__version__ = '0.0.3.beta'
+__version__ = '0.0.3'
 
 import sys
 
@@ -19,6 +19,9 @@ def start():
 def shutdown():
     """Shutdown `dovpanda`. Register original pandas methods back to their namespace"""
     ledger.revert()
+
+
+mute = ledger.mute
 
 
 def tip():
