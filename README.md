@@ -51,6 +51,11 @@ hour
 Name: b, dtype: int64
 ```
 
+## Installation
+```bash
+pip install dovpanda
+```
+
 
 
 
