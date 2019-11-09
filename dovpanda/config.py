@@ -16,8 +16,8 @@ ndim_to_obj = {1: 'series', 2: 'df'}
 #
 CATEGORY_SHARE_THRESHOLD = 4
 
-with open(CURDIR / 'resource' / 'logo') as f:
-    try:
+try:
+    with open(CURDIR / 'resource' / 'logo') as f:
         logo = f.read()
-    except FileNotFoundError:
-        logo = None
+except FileNotFoundError:
+    logo = None
