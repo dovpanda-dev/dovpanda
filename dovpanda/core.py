@@ -184,3 +184,11 @@ def suggest_at_iat(res, arguments):
                     f"Which suggests you are interested in the value and not "
                     f"in a new {obj}. Try instead: <br>"
                     f"<code>{obj}.{i}at[row, col]</code>")
+
+
+@ledger.add_hint(['DataFrame.append', 'concat'], stop_nudge=4)
+def dont_append_with_loop(arguments):
+    if ledger.similar >= 4:
+        ledger.tell('dont append or concat dfs iteratively. '
+                    'it is a better practice to first create a list of dfs. '
+                    'and then <code>pd.concat(list_of_dfs)</code> in one go')
