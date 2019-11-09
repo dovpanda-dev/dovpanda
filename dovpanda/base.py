@@ -7,6 +7,8 @@ from collections import defaultdict, deque
 
 import pandas
 
+from dovpanda import config
+
 PANDAS_DIR = os.path.dirname(inspect.getsourcefile(pandas))
 try:  # If user runs from notebook they will have this
     from IPython.display import display
@@ -49,8 +51,13 @@ class _Teller:
         code_context = self.caller.code_context[0].strip()
         trace = f'<div style="font-size:0.7em;">Line {self.caller.lineno}: <code>{code_context}</code> </div>'
         trace = self.if_verbose(trace)
+        if config.logo is None:
+            logo_tag = ''
+        else:
+            logo_tag = f'<img src="{config.logo}" alt="logo" style="float:left; margin-right:10px">'
         html = f'''
         <div class="alert alert-info" role="alert">
+          {logo_tag}
           {self.message}
           <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>

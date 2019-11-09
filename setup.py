@@ -30,6 +30,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/dovpanda-dev/dovpanda",
     packages=['dovpanda'],
+    package_data={'dovpanda': ['resource/*','tip_files/*.html']},
     install_requires=['pandas'],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
