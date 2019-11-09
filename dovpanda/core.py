@@ -109,7 +109,7 @@ def check_csv_size(arguments):
     filename = arguments.get('filepath_or_buffer')
     if os.path.getsize(filename) > config.MAX_CSV_SIZE:
         ledger.tell('File size is very large and may take time to load. '
-                    'If you would like To avoid format issues before the complete file loads, '
+                    'If you would like to avoid format issues before the complete file loads, '
                     f'try:  <code>pd.read_csv({filename}, nrows=5)</code> to check schema is as expected.')
 
 
