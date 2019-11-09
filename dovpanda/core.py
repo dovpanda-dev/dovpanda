@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 from dateutil import parser
 
@@ -100,6 +102,15 @@ def csv_index(res, arguments):
         if arguments.get('index_col') is None:
             ledger.tell('Your left most column is unnamed. This suggets it might be the index column, try: '
                         f'<code>pd.read_csv({filename}, index_col=0)</code>')
+
+
+@ledger.add_hint('read_csv', 'pre')
+def check_csv_size(arguments):
+    filename = arguments.get('filepath_or_buffer')
+    if os.path.getsize(filename) > config.MAX_CSV_SIZE:
+        ledger.tell('File size is very large and may take time to load. '
+                    'If you would like to avoid format issues before the complete file loads, '
+                    f'try:  <code>pd.read_csv({filename}, nrows=5)</code> to check schema is as expected.')
 
 
 @ledger.add_hint(config.READ_METHODS, 'post')

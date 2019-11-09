@@ -22,8 +22,12 @@ ndim_to_obj = {1: 'series', 2: 'df'}
 #
 CATEGORY_SHARE_THRESHOLD = 4
 
+
+MAX_CSV_SIZE = 100000000  # Size in bytes, 100 MB
+
 try:
     with (CURDIR / 'resource' / 'logo').open('r') as f:
         logo = f.read()
 except FileNotFoundError:
     logo = None
+
