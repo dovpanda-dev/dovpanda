@@ -1,5 +1,5 @@
 __author__ = """Dean Langsam"""
-__version__ = '0.0.3.beta'
+__version__ = '0.0.3'
 
 import sys
 
