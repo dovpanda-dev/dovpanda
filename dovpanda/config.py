@@ -1,5 +1,8 @@
+import pathlib
+
 import pandas as pd
 
+CURDIR = pathlib.Path(__file__).parent
 READ_METHODS = [method for method in dir(pd) if 'read' in method]
 DF_CREATION = READ_METHODS + ['DataFrame']
 SERIES_CREATION = READ_METHODS + ['Series.__init__']
@@ -13,4 +16,12 @@ ndim_to_obj = {1: 'series', 2: 'df'}
 #
 CATEGORY_SHARE_THRESHOLD = 4
 
+
 MAX_CSV_SIZE = 100000000  # Size in bytes, 100 MB
+
+try:
+    with open(CURDIR / 'resource' / 'logo') as f:
+        logo = f.read()
+except FileNotFoundError:
+    logo = None
+
