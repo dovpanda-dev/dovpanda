@@ -107,6 +107,8 @@ def csv_index(res, arguments):
 @ledger.add_hint('read_csv', 'pre')
 def check_csv_size(arguments):
     filename = arguments.get('filepath_or_buffer')
+    if not os.path.exists(filename):
+        return
     if os.path.getsize(filename) > config.MAX_CSV_SIZE:
         ledger.tell('File size is very large and may take time to load. '
                     'If you would like to avoid format issues before the complete file loads, '
