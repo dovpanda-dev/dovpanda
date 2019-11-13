@@ -150,7 +150,8 @@ class Ledger:
         def run(*args, **kwargs):
             self._set_caller_details(f)
             arguments = self._get_arguments(f, *args, **kwargs)
-
+            arguments['_source_func_name'] = f.__name__
+            
             if self.resticted_dirs():
                 ret = f(*args, **kwargs)
             else:
