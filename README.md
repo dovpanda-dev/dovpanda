@@ -27,7 +27,7 @@ Just import it after you import pandas, whether inside a notebook or in a consol
 import pandas as pd
 import dovpanda
 ```     
-This is it. From now on you can expect `dovpanda` to come with helpful hints while you are writing you code.
+This is it. From now on you can expect `dovpanda` to come up with helpful hints while you are writing your code.
 
 ### Notebook
 Running `dovpanda` in a notebook environment will display rendered dismissable html.  
@@ -94,6 +94,6 @@ Out[21]: <generator object DataFrame.iterrows at 0x1047c4d68>
 
 #### BTW
 
-"dov" means bear in Hebrew
+"dov" means bear in Hebrew <img src="https://github.com/dovpanda-dev/dovpanda/blob/master/img/logo.png" alt="logo" width="15">
 
 
