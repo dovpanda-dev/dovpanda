@@ -168,7 +168,7 @@ class Ledger:
     def _get_arguments(self, f, *args, **kwargs):
         sig = inspect.signature(f).bind(*args, **kwargs)
         sig.apply_defaults()
-        sig.argument['_dovpanda'] = {'_source_func_name': f.__name__}
+        sig.argument['_dovpanda'] = {'source_func_name': f.__name__}
         return sig.arguments
 
     def _set_caller_details(self, f):
