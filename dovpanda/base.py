@@ -150,8 +150,7 @@ class Ledger:
         def run(*args, **kwargs):
             self._set_caller_details(f)
             arguments = self._get_arguments(f, *args, **kwargs)
-            arguments['_source_func_name'] = f.__name__
-            
+
             if self.resticted_dirs():
                 ret = f(*args, **kwargs)
             else:
@@ -169,6 +168,7 @@ class Ledger:
     def _get_arguments(self, f, *args, **kwargs):
         sig = inspect.signature(f).bind(*args, **kwargs)
         sig.apply_defaults()
+        sig.argument['_dovpanda'] = {'_source_func_name': f.__name__}
         return sig.arguments
 
     def _set_caller_details(self, f):
