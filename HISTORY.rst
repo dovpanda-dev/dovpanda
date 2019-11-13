@@ -5,6 +5,7 @@ History
 0.0.5 (2019-11-11)
 ++++++++++++++++++
 * fix read_csv issue #76
+* fix at/iat issues when calling shape on str #77
 
 0.0.4 (2019-11-09)
 ++++++++++++++++++
