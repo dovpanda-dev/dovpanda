@@ -186,6 +186,8 @@ def data_in_date_format_read(res, arguments):
 
 @ledger.add_hint(config.GET_ITEM, 'post')
 def suggest_at_iat(res, arguments):
+    if not hasattr(res, 'shape'):
+        return
     self = arguments.get('self')
     shp = res.shape
     if res.ndim < 1:  # Sometimes specific slicing will return value
