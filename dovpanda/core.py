@@ -217,7 +217,7 @@ def suggest_expand(res, arguments):
     if hasattr(res, 'name'):
         col = res.name
     else:
-        col = 'series'
+        col = 'column'
     ledger.tell(f'It seems as if you are splitting "{col}" column by "{pat}".<br>'
                 f'You got a new series containing a list in each cell.<br>'
                 f'Most users prefer a new dataframe with each split in its own column. Try:<br>'
