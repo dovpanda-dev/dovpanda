@@ -22,7 +22,6 @@ ndim_to_obj = {1: 'series', 2: 'df'}
 #
 CATEGORY_SHARE_THRESHOLD = 4
 
-
 MAX_CSV_SIZE = 100000000  # Size in bytes, 100 MB
 
 try:
@@ -31,3 +30,13 @@ try:
 except FileNotFoundError:
     logo = None
 
+
+# HTMLs
+html_bug = '''
+<h1>SADPANDA</h1><br>
+I'm so sorry, but I crashed on <code>{hint}</code> with error <code>{e}</code><br>
+But you can change that! Please
+<a href="https://github.com/dovpanda-dev/dovpanda/issues/new?assignees=&labels=bug&template=bug_report.md&title=">
+    Report a bug
+</a>
+'''

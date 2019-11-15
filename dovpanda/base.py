@@ -24,8 +24,11 @@ class Hint:
         self.stop_nudge = stop_nudge
 
     def __repr__(self):
-        return (f"[HINT] replaces {self.original} with {self.replacement} "
+        return (f"[HINT] Hooks on {self.original} with {self.replacement} "
                 f"at {self.hook_type} but stops after {self.stop_nudge}")
+
+    def __str__(self):
+        return (f'{self.replacement.__name__} hooks on {self.original}')
 
 
 class _Teller:
@@ -36,12 +39,12 @@ class _Teller:
         self.caller = None
 
     def __repr__(self):
-        trace = self.if_verbose(f' (Line {self.caller.lineno})')
-        return self._strip_html(f'===== {self.message} ====={trace}')
+        trace = self.if_verbose(f'(Line {self.caller.lineno}) ')
+        return self._strip_html(f'* ====={trace} {self.message} =====\n')
 
     def __str__(self):
-        trace = self.if_verbose(f' (Line {self.caller.lineno})')
-        return f'{self._strip_html(self.message)}{trace}'
+        trace = self.if_verbose(f'(Line {self.caller.lineno}) ')
+        return f'* {trace}{self._strip_html(self.message)}\n'
 
     def __call__(self, s):
         self.tell(s)
@@ -72,7 +75,9 @@ class _Teller:
 
     @staticmethod
     def _strip_html(s):
+        s = re.sub(r'\n', '', s)
         s = re.sub(r'<br>', r'\n', s)
+        s = re.sub(r' {2,}', r' ', s)
         return re.sub('<[^<]+?>', '', s)
 
     @staticmethod
@@ -154,16 +159,20 @@ class Ledger:
             if self.resticted_dirs():
                 ret = f(*args, **kwargs)
             else:
-                for pre in pres:
-                    if self.similar <= pre.stop_nudge:
-                        pre.replacement(arguments)
+                self.run_hints(pres, arguments)
                 ret = f(*args, **kwargs)
-                for post in posts:
-                    if self.similar <= post.stop_nudge:
-                        post.replacement(ret, arguments)
+                self.run_hints(posts, ret, arguments)
             return ret
 
         return run
+
+    def run_hints(self, hints, *args):
+        for hint in hints:
+            try:
+                if self.similar <= hint.stop_nudge:
+                    hint.replacement(*args)
+            except Exception as e:
+                self.tell(config.html_bug.format(hint=hint, e=e))
 
     def _get_arguments(self, f, *args, **kwargs):
         sig = inspect.signature(f).bind(*args, **kwargs)
