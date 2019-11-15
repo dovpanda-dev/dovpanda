@@ -4,6 +4,11 @@ History
 -------
 0.0.5 (2019-11-11)
 ++++++++++++++++++
+* dovpanda errors don't crash panda
+
+ * Errors in functionality of dovpanda will only tell the user it happened
+   but let them continue the work
+
 * fix read_csv issue #76
 * fix at/iat issues when calling shape on str #77
 
