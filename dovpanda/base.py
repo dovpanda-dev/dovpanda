@@ -46,31 +46,18 @@ class _Teller:
         trace = self.if_verbose(f'(Line {self.caller.lineno}) ')
         return f'* {trace}{self._strip_html(self.message)}\n'
 
-    def __call__(self, s):
-        self.tell(s)
-
     def _repr_html_(self):
         return self.nice_output()
 
     def nice_output(self):
         code_context = self.caller.code_context[0].strip()
-        trace = f'<div style="font-size:0.7em;">Line {self.caller.lineno}: <code>{code_context}</code> </div>'
-        trace = self.if_verbose(trace)
-        if config.logo is None:
-            logo_tag = ''
-        else:
-            logo_tag = f'<img src="{config.logo}" alt="logo" style="float:left; margin-right:10px">'
-        html = f'''
-        <div class="alert alert-info" role="alert">
-          {logo_tag}
-          {self.message}
-          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-          {trace}
-
-        </div>
-        '''
+        html = config.html_tell.format(
+            level=self.level,
+            logo_tag=config.logo_tag,
+            message=self.message,
+            lineno=self.caller.lineno,
+            code_context=code_context
+        )
         return html
 
     @staticmethod
@@ -113,7 +100,8 @@ class _Teller:
         else:
             self.output = output_method
 
-    def tell(self, message):
+    def tell(self, message, color='blue'):
+        self.level = config.color_to_level.get(color, 'blue')
         self.message = message
         self.output(self)
 
@@ -172,7 +160,7 @@ class Ledger:
                 if self.similar <= hint.stop_nudge:
                     hint.replacement(*args)
             except Exception as e:
-                self.tell(config.html_bug.format(hint=hint, e=e))
+                self.tell(config.html_bug.format(hint=hint, e=e), color='red')
 
     def _get_arguments(self, f, *args, **kwargs):
         sig = inspect.signature(f).bind(*args, **kwargs)
@@ -204,7 +192,7 @@ class Ledger:
     # Output
 
     def tell(self, *args, **kwargs):
-        self.teller(*args, *kwargs)
+        self.teller.tell(*args, **kwargs)
 
     def set_output(self, output):
         self.teller.set_output(output)
