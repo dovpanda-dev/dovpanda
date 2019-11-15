@@ -78,7 +78,6 @@ def wrong_concat_axis(arguments):
 
 @ledger.add_hint('DataFrame.__eq__')
 def df_check_equality(arguments):
-    print(arguments)
     if isinstance(arguments.get('self'), type(arguments.get('other'))):
         ledger.tell(f'Calling df1 == df2 compares the objects element-wise. '
                     'If you need a boolean condition, try df1.equals(df2)')
