@@ -33,7 +33,7 @@ def time_grouping(arguments):
                 f"<code>df.set_index('date').resample('h')</code>")
 
 
-@ledger.add_hint('concat', hook_type='post')
+@ledger.add_hint(config.MERGE_DFS, hook_type='post')
 def duplicate_index_after_concat(res, arguments):
     if res.index.nunique() != len(res.index):
         ledger.tell('After concatenation you have duplicated indexes values - pay attention')
