@@ -206,3 +206,20 @@ def dont_append_with_loop(arguments):
         ledger.tell('dont append or concat dfs iteratively. '
                     'it is a better practice to first create a list of dfs. '
                     'and then <code>pd.concat(list_of_dfs)</code> in one go')
+
+
+@ledger.add_hint('Series.str.split', 'post')
+def suggest_expand(res, arguments):
+    expand = arguments.get('expand')
+    pat = arguments.get('pat')
+    if expand:
+        return
+    if hasattr(res, 'name'):
+        col = res.name
+    else:
+        col = 'series'
+    if not expand:
+        ledger.tell(f'It seems as if you are splitting "{col}" column by "{pat}".<br>'
+                    f'You got a new series containing a list in each cell.<br>'
+                    f'Most users prefer a new dataframe with each split in its own column. Try:<br>'
+                    f'<code>df.{col}.str.split("{pat}", expand=True)</code>')
