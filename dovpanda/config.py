@@ -10,11 +10,14 @@ z = inspect.getsourcefile(inspect.currentframe())
 RESTRICTED_DIRS = [PANDAS_DIR, CURDIR]
 # pandas mathods
 READ_METHODS = [method for method in dir(pandas) if 'read' in method]
+WRITE_TEXT_METHODS = ['DataFrame.to_csv', 'DataFrame.to_json']
 DF_CREATION = READ_METHODS + ['DataFrame']
 SERIES_CREATION = READ_METHODS + ['Series.__init__']
 GET_ITEM = ['DataFrame.__getitem__', 'Series.__getitem__',
             'core.indexing._NDFrameIndexer.__getitem__', 'core.indexing._LocationIndexer.__getitem__']
 
+SOURCE_FUNC_NAME = 'source_func_name'
+DOVPANDA_INFO_DICT = '_dovpanda'
 TIME_COLUMNS = ['year', 'month', 'week', 'day', 'hour', 'minute', 'second', 'weekday', 'time']
 # Translation dict
 ndim_to_obj = {1: 'series', 2: 'df'}
