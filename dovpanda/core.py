@@ -160,19 +160,40 @@ def is_date_time_format(arr):
 
 def tell_time_dtype(col_name, arr):
     if not np.issubdtype(arr.dtype, np.datetime64):
-        # Tthe content is in a datetime format but not in datetime type
-        ledger.tell(f"columns '{col_name}' looks like a datetime but the type is '{arr.dtype}' "
-                    f"Consider using<br>"
+        htype = np.typename(np.sctype2char(arr.dtype))  # Human readable type
+        # The content is in a datetime format but not in datetime type
+        ledger.tell(f"columns '{col_name}' looks like a datetime but the type is '{htype}'. "
+                    f"Consider using:<br>"
                     f"<code>df['{col_name}'] = pd.to_datetime(df.{col_name})</code>")
 
 
 @ledger.add_hint('DataFrame.insert')
 def data_in_date_format_insert(arguments):
-    column_name = arguments.get('column')
+    col = arguments.get('column')
     value = arguments.get('value')
     value_array = np.asarray(value)
     if is_date_time_format(value_array):
-        tell_time_dtype(column_name, value_array)
+        tell_time_dtype(col, value_array)
+
+
+@ledger.add_hint('DataFrame.assign')
+def data_in_date_format_assign(arguments):
+    new_cols = arguments.get('kwargs')
+    for col, value in new_cols.items():
+        value_array = np.asarray(value)
+        if is_date_time_format(value_array):
+            tell_time_dtype(col, value_array)
+
+
+@ledger.add_hint('DataFrame.__setitem__')
+def data_in_date_format_setitem(arguments):
+    col = arguments.get('key')
+    if len(base.listify(col)) > 1: # currently don't support setitem of 2 cols
+        return
+    value = arguments.get('value')
+    value_array = np.asarray(value)
+    if is_date_time_format(value_array):
+        tell_time_dtype(col, value_array)
 
 
 @ledger.add_hint(config.READ_METHODS, 'post')
