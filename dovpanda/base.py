@@ -144,18 +144,16 @@ class Ledger:
         def run(*args, **kwargs):
             self._set_caller_details(f)
             arguments = self._get_arguments(f, *args, **kwargs)
-
-            if self.resticted_dirs():
-                ret = f(*args, **kwargs)
-            else:
-                self.run_hints(pres, arguments)
-                ret = f(*args, **kwargs)
-                self.run_hints(posts, ret, arguments)
+            self.run_hints(pres, arguments)
+            ret = f(*args, **kwargs)
+            self.run_hints(posts, ret, arguments)
             return ret
 
         return run
 
     def run_hints(self, hints, *args):
+        if self.resticted_dirs():
+            return
         for hint in hints:
             try:
                 if self.similar <= hint.stop_nudge:
