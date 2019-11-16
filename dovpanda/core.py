@@ -36,7 +36,7 @@ def time_grouping(arguments):
 @ledger.add_hint(config.MERGE_DFS, hook_type='post')
 def duplicate_index_after_concat(res, arguments):
     if res.index.nunique() != len(res.index):
-        ledger.tell('After concatenation you have duplicated indexes values - pay attention')
+        ledger.tell('After concatenation you have duplicated indices - pay attention')
     if res.columns.nunique() != len(res.columns):
         ledger.tell('After concatenation you have duplicated column names - pay attention')
 
