@@ -18,7 +18,8 @@ MERGE_DFS = ['merge', 'merge_ordered', 'merge_asof', 'concat', 'DataFrame.append
 TIME_COLUMNS = ['year', 'month', 'week', 'day', 'hour', 'minute', 'second', 'weekday', 'time']
 # Translation dict
 ndim_to_obj = {1: 'series', 2: 'df'}
-
+color_to_level = {'blue': 'info', 'red': 'danger', 'green': 'success', 'yellow': 'warning',
+                  'brightblue': 'primary', 'grey': 'secondary', 'white': 'light', 'black': 'dark'}
 #
 CATEGORY_SHARE_THRESHOLD = 4
 
@@ -27,5 +28,32 @@ MAX_CSV_SIZE = 100000000  # Size in bytes, 100 MB
 try:
     with (CURDIR / 'resource' / 'logo').open('r') as f:
         logo = f.read()
+    logo_tag = f'<img src="{logo}" alt="logo" style="float:left; margin-right:10px">'
 except FileNotFoundError:
     logo = None
+    logo_tag = ''
+
+# HTMLs
+html_bug = '''
+<h1 style="color: black; margin-top: 0">SAD PANDA</h1><br>
+I'm so sorry, but I crashed on <code>{hint}</code> with error <code>{e}</code><br>
+<strong>But you can change that!</strong><br>
+Please
+<a href="https://github.com/dovpanda-dev/dovpanda/issues/new?assignees=&labels=bug&template=bug_report.md&title=">
+    Report a bug
+</a>
+'''
+
+html_tell = '''
+<div class="alert alert-{level}" role="alert">
+  {logo_tag}
+  {message}
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+  <div style="font-size:0.7em;">
+    Line {lineno}: <code>{code_context}</code>
+  </div>
+
+</div>
+'''

@@ -24,8 +24,11 @@ class Hint:
         self.stop_nudge = stop_nudge
 
     def __repr__(self):
-        return (f"[HINT] replaces {self.original} with {self.replacement} "
+        return (f"[HINT] Hooks on {self.original} with {self.replacement} "
                 f"at {self.hook_type} but stops after {self.stop_nudge}")
+
+    def __str__(self):
+        return (f'{self.replacement.__name__} hooks on {self.original}')
 
 
 class _Teller:
@@ -36,43 +39,32 @@ class _Teller:
         self.caller = None
 
     def __repr__(self):
-        trace = self.if_verbose(f' (Line {self.caller.lineno})')
-        return self._strip_html(f'===== {self.message} ====={trace}')
+        trace = self.if_verbose(f'(Line {self.caller.lineno}) ')
+        return self._strip_html(f'* ====={trace} {self.message} =====\n')
 
     def __str__(self):
-        trace = self.if_verbose(f' (Line {self.caller.lineno})')
-        return f'{self._strip_html(self.message)}{trace}'
-
-    def __call__(self, s):
-        self.tell(s)
+        trace = self.if_verbose(f'(Line {self.caller.lineno}) ')
+        return f'* {trace}{self._strip_html(self.message)}\n'
 
     def _repr_html_(self):
         return self.nice_output()
 
     def nice_output(self):
         code_context = self.caller.code_context[0].strip()
-        trace = f'<div style="font-size:0.7em;">Line {self.caller.lineno}: <code>{code_context}</code> </div>'
-        trace = self.if_verbose(trace)
-        if config.logo is None:
-            logo_tag = ''
-        else:
-            logo_tag = f'<img src="{config.logo}" alt="logo" style="float:left; margin-right:10px">'
-        html = f'''
-        <div class="alert alert-info" role="alert">
-          {logo_tag}
-          {self.message}
-          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-          {trace}
-
-        </div>
-        '''
+        html = config.html_tell.format(
+            level=self.level,
+            logo_tag=config.logo_tag,
+            message=self.message,
+            lineno=self.caller.lineno,
+            code_context=code_context
+        )
         return html
 
     @staticmethod
     def _strip_html(s):
+        s = re.sub(r'\n', '', s)
         s = re.sub(r'<br>', r'\n', s)
+        s = re.sub(r' {2,}', r' ', s)
         return re.sub('<[^<]+?>', '', s)
 
     @staticmethod
@@ -108,7 +100,8 @@ class _Teller:
         else:
             self.output = output_method
 
-    def tell(self, message):
+    def tell(self, message, color='blue'):
+        self.level = config.color_to_level.get(color, 'blue')
         self.message = message
         self.output(self)
 
@@ -150,25 +143,29 @@ class Ledger:
         def run(*args, **kwargs):
             self._set_caller_details(f)
             arguments = self._get_arguments(f, *args, **kwargs)
-            arguments['_source_func_name'] = f.__name__
-            
+
             if self.resticted_dirs():
                 ret = f(*args, **kwargs)
             else:
-                for pre in pres:
-                    if self.similar <= pre.stop_nudge:
-                        pre.replacement(arguments)
+                self.run_hints(pres, arguments)
                 ret = f(*args, **kwargs)
-                for post in posts:
-                    if self.similar <= post.stop_nudge:
-                        post.replacement(ret, arguments)
+                self.run_hints(posts, ret, arguments)
             return ret
 
         return run
 
+    def run_hints(self, hints, *args):
+        for hint in hints:
+            try:
+                if self.similar <= hint.stop_nudge:
+                    hint.replacement(*args)
+            except Exception as e:
+                self.tell(config.html_bug.format(hint=hint, e=e), color='red')
+
     def _get_arguments(self, f, *args, **kwargs):
         sig = inspect.signature(f).bind(*args, **kwargs)
         sig.apply_defaults()
+        sig.arguments['_dovpanda'] = {'source_func_name': f.__name__}
         return sig.arguments
 
     def _set_caller_details(self, f):
@@ -195,7 +192,7 @@ class Ledger:
     # Output
 
     def tell(self, *args, **kwargs):
-        self.teller(*args, *kwargs)
+        self.teller.tell(*args, **kwargs)
 
     def set_output(self, output):
         self.teller.set_output(output)
