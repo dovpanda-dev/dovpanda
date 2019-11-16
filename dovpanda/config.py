@@ -6,17 +6,46 @@ import pandas
 # Dirs
 PANDAS_DIR = pathlib.Path(inspect.getsourcefile(pandas)).parent.absolute()
 CURDIR = pathlib.Path(inspect.getsourcefile(inspect.currentframe())).parent.absolute()
-z = inspect.getsourcefile(inspect.currentframe())
 RESTRICTED_DIRS = [PANDAS_DIR, CURDIR]
+
+
+def is_callable(obj):
+    return inspect.ismethod(obj) or inspect.isfunction(obj)
+
+
+def get_callables(obj):
+    return inspect.getmembers(obj, predicate=is_callable)
+
+
+def methods_by_argument(arg_name):
+    ret = []
+    for obj in [pandas.DataFrame, pandas.Series]:
+        for name, func in inspect.getmembers(obj, is_callable):
+            if name.startswith('_'):
+                continue
+            signature = inspect.signature(func)
+            if arg_name in signature.parameters.keys():
+                ret.append(f'{obj.__name__}.{name}')
+    return ret
+
+
 # pandas mathods
-READ_METHODS = [method for method in dir(pandas) if 'read' in method]
-DF_CREATION = READ_METHODS + ['DataFrame']
+PD_ALL = [f[0] for f in get_callables(pandas)]
+DF_ALL = ['DataFrame.' + f[0] for f in get_callables(pandas.DataFrame)]
+SERIES_ALL = ['Series.' + f[0] for f in get_callables(pandas.Series)]
+
+READ_METHODS = [method for method in PD_ALL if 'read' in method]
+DF_CREATION = READ_METHODS
 SERIES_CREATION = READ_METHODS + ['Series.__init__']
 GET_ITEM = ['DataFrame.__getitem__', 'Series.__getitem__',
             'core.indexing._NDFrameIndexer.__getitem__', 'core.indexing._LocationIndexer.__getitem__']
 MERGE_DFS = ['merge', 'merge_ordered', 'merge_asof', 'concat', 'DataFrame.append', 'DataFrame.join']
+
+# lists
 TIME_COLUMNS = ['year', 'month', 'week', 'day', 'hour', 'minute', 'second', 'weekday', 'time']
+
 # Translation dict
+
 ndim_to_obj = {1: 'series', 2: 'df'}
 color_to_level = {'blue': 'info', 'red': 'danger', 'green': 'success', 'yellow': 'warning',
                   'brightblue': 'primary', 'grey': 'secondary', 'white': 'light', 'black': 'dark'}
