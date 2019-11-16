@@ -5,7 +5,7 @@ import re
 import sys
 from collections import defaultdict, deque
 from contextlib import contextmanager
-
+from itertools import chain
 from dovpanda import config
 
 try:  # If user runs from notebook they will have this
@@ -116,6 +116,14 @@ class Ledger:
         # TODO: Memory has a cache only of registered methods. Change to accomodate all pandas
         self.memory = deque(maxlen=32)
         self.original_methods = dict()
+
+    def __len__(self):
+        hints_gen = chain.from_iterable(self.hints.values())
+        return len(list(hints_gen))
+
+    def nunique(self):
+        hints_gen = chain.from_iterable(self.hints.values())
+        return len(set(hints_gen))
 
     def replace(self, original, func_hooks):
         g = rgetattr(sys.modules['pandas'], original)
