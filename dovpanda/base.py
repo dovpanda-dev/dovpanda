@@ -1,3 +1,4 @@
+import ast
 import functools
 import inspect
 import re
@@ -249,3 +250,20 @@ def listify(val):
 
 def setify(val):
     return set(listify(val))
+
+
+def is_assignment(caller):
+    try:
+        node = ast.parse(caller.code_context[0])
+    except SyntaxError:
+        return False
+
+    return isinstance(node.body[0], ast.Assign)
+
+
+def get_assignee(caller):
+    if not is_assignment(caller):
+        return
+    node = ast.parse(caller.code_context[0])
+    assignee = node.body[0].targets[0].id
+    return assignee
