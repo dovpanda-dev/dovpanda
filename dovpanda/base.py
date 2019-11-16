@@ -1,10 +1,11 @@
+import ast
 import functools
 import inspect
 import re
 import sys
 from collections import defaultdict, deque
 from contextlib import contextmanager
-
+from itertools import chain
 from dovpanda import config
 
 try:  # If user runs from notebook they will have this
@@ -116,6 +117,14 @@ class Ledger:
         self.memory = deque(maxlen=32)
         self.original_methods = dict()
 
+    def __len__(self):
+        hints_gen = chain.from_iterable(self.hints.values())
+        return len(list(hints_gen))
+
+    def nunique(self):
+        hints_gen = chain.from_iterable(self.hints.values())
+        return len(set(hints_gen))
+
     def replace(self, original, func_hooks):
         g = rgetattr(sys.modules['pandas'], original)
         self.save_original(original, g)
@@ -143,18 +152,16 @@ class Ledger:
         def run(*args, **kwargs):
             self._set_caller_details(f)
             arguments = self._get_arguments(f, *args, **kwargs)
-
-            if self.resticted_dirs():
-                ret = f(*args, **kwargs)
-            else:
-                self.run_hints(pres, arguments)
-                ret = f(*args, **kwargs)
-                self.run_hints(posts, ret, arguments)
+            self.run_hints(pres, arguments)
+            ret = f(*args, **kwargs)
+            self.run_hints(posts, ret, arguments)
             return ret
 
         return run
 
     def run_hints(self, hints, *args):
+        if self.resticted_dirs():
+            return
         for hint in hints:
             try:
                 if self.similar <= hint.stop_nudge:
@@ -251,3 +258,20 @@ def listify(val):
 
 def setify(val):
     return set(listify(val))
+
+
+def is_assignment(caller):
+    try:
+        node = ast.parse(caller.code_context[0])
+    except SyntaxError:
+        return False
+
+    return isinstance(node.body[0], ast.Assign)
+
+
+def get_assignee(caller):
+    if not is_assignment(caller):
+        return
+    node = ast.parse(caller.code_context[0])
+    assignee = node.body[0].targets[0].id
+    return assignee

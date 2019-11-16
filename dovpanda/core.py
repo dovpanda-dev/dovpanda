@@ -246,3 +246,25 @@ def suggest_expand(res, arguments):
                 f'You got a new series containing a list in each cell.<br>'
                 f'Most users prefer a new dataframe with each split in its own column. Try:<br>'
                 f'<code>df.{col}.str.split("{pat}", expand=True)</code>')
+
+
+@ledger.add_hint(config.methods_by_argument('inplace'))
+def inplace_returns_none(arguments):
+    caller = ledger.caller
+    func = arguments.get('_dovpanda').get('source_func_name')
+    assignment = base.is_assignment(caller)
+    inplace = arguments.get('inplace')
+    if assignment != inplace:
+        return
+    intro = f"You have called <code>{func}</code> with <code>inplace={inplace}</code>.<br>"
+    if assignment:
+        # df assignment with inplace
+        ledger.tell(f'{intro}'
+                    f'inplace operations change the object, but return None. '
+                    f'Your assigned variable will be None - pay attention')
+    else:
+        ledger.tell(f'{intro}'
+                    f'This means the object itself will not change and the statement '
+                    f'will have no effect. Assign the operation to a new variable or '
+                    f'rewrite it as<br>'
+                    f'<code>.{func}(...,inplace=True)</code>')
