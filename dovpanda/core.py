@@ -9,9 +9,12 @@ from dovpanda.base import Ledger
 ledger = Ledger()
 
 
-@ledger.add_hint('DataFrame.iterrows')
-def iterrows_is_bad(arguments):
-    ledger.tell("iterrows is not recommended, and in the majority of cases will have better alternatives")
+@ledger.add_hint(['DataFrame.iterrows', 'DataFrame.apply', 'DataFrame.itertuples'])
+def avoid_df_loop(arguments):
+    func = arguments.get('_dovpanda').get('source_func_name')
+    ledger.tell(f"df.{func} is not recommended. Essentially it is very similar to "
+                f"iterating the rows of the frames in a loop. In the majority of "
+                f"cases, there are better alternatives that utilize pandas' vector operation")
 
 
 @ledger.add_hint('DataFrame.groupby')
@@ -33,10 +36,10 @@ def time_grouping(arguments):
                 f"<code>df.set_index('date').resample('h')</code>")
 
 
-@ledger.add_hint('concat', hook_type='post')
+@ledger.add_hint(config.MERGE_DFS, hook_type='post')
 def duplicate_index_after_concat(res, arguments):
     if res.index.nunique() != len(res.index):
-        ledger.tell('After concatenation you have duplicated indexes values - pay attention')
+        ledger.tell('After concatenation you have duplicated indices - pay attention')
     if res.columns.nunique() != len(res.columns):
         ledger.tell('After concatenation you have duplicated column names - pay attention')
 
