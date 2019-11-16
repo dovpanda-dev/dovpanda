@@ -14,7 +14,7 @@ DF_CREATION = READ_METHODS + ['DataFrame']
 SERIES_CREATION = READ_METHODS + ['Series.__init__']
 GET_ITEM = ['DataFrame.__getitem__', 'Series.__getitem__',
             'core.indexing._NDFrameIndexer.__getitem__', 'core.indexing._LocationIndexer.__getitem__']
-
+MERGE_DFS = ['merge', 'merge_ordered', 'merge_asof', 'concat', 'DataFrame.append', 'DataFrame.join']
 TIME_COLUMNS = ['year', 'month', 'week', 'day', 'hour', 'minute', 'second', 'weekday', 'time']
 # Translation dict
 ndim_to_obj = {1: 'series', 2: 'df'}
