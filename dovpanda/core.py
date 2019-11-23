@@ -120,10 +120,10 @@ def suggest_zipping_on_to_csv(res, arguments):
     if not os.path.exists(filename):
         return
     if os.path.getsize(filename) > config.MAX_CSV_SIZE:
-        source_func = arguments.get(config.DOVPANDA_INFO_DICT)[config.SOURCE_FUNC_NAME]
-        ledger.tell('Saved file size is very large. '
-                    'If you would like to save some space, try zipping on the fly by using the compression keyword, '
-                    f'try:  <code>pd.{source_func}({filename}, compression=\'gzip\')</code>')
+        source_func = arguments.get('_dovpanda')['source_func_name']
+        ledger.tell('Saved file size is very large. If you would like to save some space, '
+                    'try zipping on the fly by using the compression keyword, try: '
+                    f'<br><code>pd.{source_func}({filename}, compression=\'gzip\')</code></br>')
 
 
 @ledger.add_hint(config.READ_METHODS, 'post')
