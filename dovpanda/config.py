@@ -10,7 +10,7 @@ z = inspect.getsourcefile(inspect.currentframe())
 RESTRICTED_DIRS = [PANDAS_DIR, CURDIR]
 # pandas mathods
 READ_METHODS = [method for method in dir(pandas) if 'read' in method]
-WRITE_TEXT_METHODS = ['DataFrame.to_csv', 'DataFrame.to_json']
+WRITE_TEXT_METHODS = ['DataFrame.to_csv', 'DataFrame.to_json', 'Series.to_csv', 'Series.to_json']
 DF_CREATION = READ_METHODS + ['DataFrame']
 SERIES_CREATION = READ_METHODS + ['Series.__init__']
 GET_ITEM = ['DataFrame.__getitem__', 'Series.__getitem__',
