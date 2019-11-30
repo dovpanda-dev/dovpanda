@@ -9,9 +9,12 @@ from dovpanda.base import Ledger
 ledger = Ledger()
 
 
-@ledger.add_hint('DataFrame.iterrows')
-def iterrows_is_bad(arguments):
-    ledger.tell("iterrows is not recommended, and in the majority of cases will have better alternatives")
+@ledger.add_hint(['DataFrame.iterrows', 'DataFrame.apply', 'DataFrame.itertuples'])
+def avoid_df_loop(arguments):
+    func = arguments.get('_dovpanda').get('source_func_name')
+    ledger.tell(f"df.{func} is not recommended. Essentially it is very similar to "
+                f"iterating the rows of the frames in a loop. In the majority of "
+                f"cases, there are better alternatives that utilize pandas' vector operation")
 
 
 @ledger.add_hint('DataFrame.groupby')
@@ -33,10 +36,10 @@ def time_grouping(arguments):
                 f"<code>df.set_index('date').resample('h')</code>")
 
 
-@ledger.add_hint('concat', hook_type='post')
+@ledger.add_hint(config.MERGE_DFS, hook_type='post')
 def duplicate_index_after_concat(res, arguments):
     if res.index.nunique() != len(res.index):
-        ledger.tell('After concatenation you have duplicated indexes values - pay attention')
+        ledger.tell('After concatenation you have duplicated indices - pay attention')
     if res.columns.nunique() != len(res.columns):
         ledger.tell('After concatenation you have duplicated column names - pay attention')
 
@@ -174,19 +177,40 @@ def is_date_time_format(arr):
 
 def tell_time_dtype(col_name, arr):
     if not np.issubdtype(arr.dtype, np.datetime64):
-        # Tthe content is in a datetime format but not in datetime type
-        ledger.tell(f"columns '{col_name}' looks like a datetime but the type is '{arr.dtype}' "
-                    f"Consider using<br>"
+        htype = np.typename(np.sctype2char(arr.dtype))  # Human readable type
+        # The content is in a datetime format but not in datetime type
+        ledger.tell(f"columns '{col_name}' looks like a datetime but the type is '{htype}'. "
+                    f"Consider using:<br>"
                     f"<code>df['{col_name}'] = pd.to_datetime(df.{col_name})</code>")
 
 
 @ledger.add_hint('DataFrame.insert')
 def data_in_date_format_insert(arguments):
-    column_name = arguments.get('column')
+    col = arguments.get('column')
     value = arguments.get('value')
     value_array = np.asarray(value)
     if is_date_time_format(value_array):
-        tell_time_dtype(column_name, value_array)
+        tell_time_dtype(col, value_array)
+
+
+@ledger.add_hint('DataFrame.assign')
+def data_in_date_format_assign(arguments):
+    new_cols = arguments.get('kwargs')
+    for col, value in new_cols.items():
+        value_array = np.asarray(value)
+        if is_date_time_format(value_array):
+            tell_time_dtype(col, value_array)
+
+
+@ledger.add_hint('DataFrame.__setitem__')
+def data_in_date_format_setitem(arguments):
+    col = arguments.get('key')
+    if len(base.listify(col)) > 1: # currently don't support setitem of 2 cols
+        return
+    value = arguments.get('value')
+    value_array = np.asarray(value)
+    if is_date_time_format(value_array):
+        tell_time_dtype(col, value_array)
 
 
 @ledger.add_hint(config.READ_METHODS, 'post')
@@ -220,3 +244,41 @@ def dont_append_with_loop(arguments):
         ledger.tell('dont append or concat dfs iteratively. '
                     'it is a better practice to first create a list of dfs. '
                     'and then <code>pd.concat(list_of_dfs)</code> in one go')
+
+
+@ledger.add_hint('Series.str.split', 'post')
+def suggest_expand(res, arguments):
+    expand = arguments.get('expand')
+    pat = arguments.get('pat')
+    if expand:
+        return
+    if hasattr(res, 'name'):
+        col = res.name
+    else:
+        col = 'column'
+    ledger.tell(f'It seems as if you are splitting "{col}" column by "{pat}".<br>'
+                f'You got a new series containing a list in each cell.<br>'
+                f'Most users prefer a new dataframe with each split in its own column. Try:<br>'
+                f'<code>df.{col}.str.split("{pat}", expand=True)</code>')
+
+
+@ledger.add_hint(config.methods_by_argument('inplace'))
+def inplace_returns_none(arguments):
+    caller = ledger.caller
+    func = arguments.get('_dovpanda').get('source_func_name')
+    assignment = base.is_assignment(caller)
+    inplace = arguments.get('inplace')
+    if assignment != inplace:
+        return
+    intro = f"You have called <code>{func}</code> with <code>inplace={inplace}</code>.<br>"
+    if assignment:
+        # df assignment with inplace
+        ledger.tell(f'{intro}'
+                    f'inplace operations change the object, but return None. '
+                    f'Your assigned variable will be None - pay attention')
+    else:
+        ledger.tell(f'{intro}'
+                    f'This means the object itself will not change and the statement '
+                    f'will have no effect. Assign the operation to a new variable or '
+                    f'rewrite it as<br>'
+                    f'<code>.{func}(...,inplace=True)</code>')

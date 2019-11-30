@@ -1,10 +1,11 @@
+import ast
 import functools
 import inspect
 import re
 import sys
 from collections import defaultdict, deque
 from contextlib import contextmanager
-
+from itertools import chain
 from dovpanda import config
 
 try:  # If user runs from notebook they will have this
@@ -46,31 +47,18 @@ class _Teller:
         trace = self.if_verbose(f'(Line {self.caller.lineno}) ')
         return f'* {trace}{self._strip_html(self.message)}\n'
 
-    def __call__(self, s):
-        self.tell(s)
-
     def _repr_html_(self):
         return self.nice_output()
 
     def nice_output(self):
         code_context = self.caller.code_context[0].strip()
-        trace = f'<div style="font-size:0.7em;">Line {self.caller.lineno}: <code>{code_context}</code> </div>'
-        trace = self.if_verbose(trace)
-        if config.logo is None:
-            logo_tag = ''
-        else:
-            logo_tag = f'<img src="{config.logo}" alt="logo" style="float:left; margin-right:10px">'
-        html = f'''
-        <div class="alert alert-info" role="alert">
-          {logo_tag}
-          {self.message}
-          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-          {trace}
-
-        </div>
-        '''
+        html = config.html_tell.format(
+            level=self.level,
+            logo_tag=config.logo_tag,
+            message=self.message,
+            lineno=self.caller.lineno,
+            code_context=code_context
+        )
         return html
 
     @staticmethod
@@ -113,7 +101,8 @@ class _Teller:
         else:
             self.output = output_method
 
-    def tell(self, message):
+    def tell(self, message, color='blue'):
+        self.level = config.color_to_level.get(color, 'blue')
         self.message = message
         self.output(self)
 
@@ -127,6 +116,14 @@ class Ledger:
         # TODO: Memory has a cache only of registered methods. Change to accomodate all pandas
         self.memory = deque(maxlen=32)
         self.original_methods = dict()
+
+    def __len__(self):
+        hints_gen = chain.from_iterable(self.hints.values())
+        return len(list(hints_gen))
+
+    def nunique(self):
+        hints_gen = chain.from_iterable(self.hints.values())
+        return len(set(hints_gen))
 
     def replace(self, original, func_hooks):
         g = rgetattr(sys.modules['pandas'], original)
@@ -155,24 +152,22 @@ class Ledger:
         def run(*args, **kwargs):
             self._set_caller_details(f)
             arguments = self._get_arguments(f, *args, **kwargs)
-
-            if self.resticted_dirs():
-                ret = f(*args, **kwargs)
-            else:
-                self.run_hints(pres, arguments)
-                ret = f(*args, **kwargs)
-                self.run_hints(posts, ret, arguments)
+            self.run_hints(pres, arguments)
+            ret = f(*args, **kwargs)
+            self.run_hints(posts, ret, arguments)
             return ret
 
         return run
 
     def run_hints(self, hints, *args):
+        if self.resticted_dirs():
+            return
         for hint in hints:
             try:
                 if self.similar <= hint.stop_nudge:
                     hint.replacement(*args)
             except Exception as e:
-                self.tell(config.html_bug.format(hint=hint, e=e))
+                self.tell(config.html_bug.format(hint=hint, e=e), color='red')
 
     def _get_arguments(self, f, *args, **kwargs):
         sig = inspect.signature(f).bind(*args, **kwargs)
@@ -204,7 +199,7 @@ class Ledger:
     # Output
 
     def tell(self, *args, **kwargs):
-        self.teller(*args, *kwargs)
+        self.teller.tell(*args, **kwargs)
 
     def set_output(self, output):
         self.teller.set_output(output)
@@ -256,10 +251,27 @@ def only_print(s, *args, **kwargs):
 
 
 def listify(val):
-    if type(val) is str:
+    if type(val) in [str, int, float]:
         return [val]
     return val
 
 
 def setify(val):
     return set(listify(val))
+
+
+def is_assignment(caller):
+    try:
+        node = ast.parse(caller.code_context[0])
+    except SyntaxError:
+        return False
+
+    return isinstance(node.body[0], ast.Assign)
+
+
+def get_assignee(caller):
+    if not is_assignment(caller):
+        return
+    node = ast.parse(caller.code_context[0])
+    assignee = node.body[0].targets[0].id
+    return assignee
