@@ -251,7 +251,7 @@ def only_print(s, *args, **kwargs):
 
 
 def listify(val):
-    if type(val) is str:
+    if type(val) in [str, int, float]:
         return [val]
     return val
 
