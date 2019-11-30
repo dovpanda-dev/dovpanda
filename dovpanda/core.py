@@ -117,6 +117,23 @@ def check_csv_size(arguments):
                     f'try:  <code>pd.read_csv({filename}, nrows=5)</code> to check schema is as expected.')
 
 
+@ledger.add_hint(config.WRITE_TEXT_METHODS, 'post')
+def suggest_zipping_on_to_csv(res, arguments):
+    filename = arguments.get('path_or_buf')
+    compression = arguments.get('compression', 'infer')
+    if compression != 'infer':
+        return
+    if not filename:
+        return
+    if not os.path.exists(filename):
+        return
+    if os.path.getsize(filename) > config.MAX_CSV_SIZE:
+        source_func = arguments.get('_dovpanda')['source_func_name']
+        ledger.tell('Saved file size is very large. If you would like to save some space, '
+                    'try zipping on the fly by using the compression keyword: '
+                    f'<br><code>pd.{source_func}({filename}, compression=\'gzip\')</code>')
+
+
 @ledger.add_hint(config.READ_METHODS, 'post')
 def suggest_category_dtype(res, arguments):
     rows = res.shape[0]

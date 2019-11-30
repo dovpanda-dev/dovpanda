@@ -35,6 +35,7 @@ DF_ALL = ['DataFrame.' + f[0] for f in get_callables(pandas.DataFrame)]
 SERIES_ALL = ['Series.' + f[0] for f in get_callables(pandas.Series)]
 
 READ_METHODS = [method for method in PD_ALL if 'read' in method]
+WRITE_TEXT_METHODS = ['DataFrame.to_csv', 'DataFrame.to_json', 'Series.to_csv', 'Series.to_json']
 DF_CREATION = READ_METHODS
 SERIES_CREATION = READ_METHODS + ['Series.__init__']
 GET_ITEM = ['DataFrame.__getitem__', 'Series.__getitem__',
