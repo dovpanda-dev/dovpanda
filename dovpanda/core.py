@@ -120,6 +120,9 @@ def check_csv_size(arguments):
 @ledger.add_hint(config.WRITE_TEXT_METHODS, 'post')
 def suggest_zipping_on_to_csv(res, arguments):
     filename = arguments.get('path_or_buf')
+    compression = arguments.get('compression', 'infer')
+    if compression != 'infer':
+        return
     if not filename:
         return
     if not os.path.exists(filename):
