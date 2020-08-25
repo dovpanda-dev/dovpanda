@@ -6,7 +6,8 @@
 [![Documentation Status](https://readthedocs.org/projects/dovpanda/badge/?version=latest)](https://dovpanda.readthedocs.io/en/latest/?badge=latest)
 [![Updates](https://pyup.io/repos/github/dovpanda-dev/dovpanda/shield.svg)](https://pyup.io/repos/github/dovpanda-dev/dovpanda/)
 ![python3](https://pyup.io/repos/github/dovpanda-dev/dovpanda/python-3-shield.svg?t=1572213773477)
-[![license](https://img.shields.io/pypi/l/pandas.svg)](https://github.com/dovpanda-dev/dovpanda/blob/master/LICENS)
+[![license](https://img.shields.io/pypi/l/pandas.svg)](https://github.com/dovpanda-dev/dovpanda/blob/master/LICENS)  
+[![Downloads](https://pepy.tech/badge/dovpanda)](https://pepy.tech/project/dovpanda)
 
 
 ## Directions OVer PANDAs
